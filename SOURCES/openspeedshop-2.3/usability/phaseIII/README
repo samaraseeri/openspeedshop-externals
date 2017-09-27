@@ -1,0 +1,48 @@
+################################################################################
+# Copyright (c) 2006 Silicon Graphics, Inc. All Rights Reserved.
+#
+# This library is free software; you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation; either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# This library is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this library; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+################################################################################
+
+# if mpich
+configure --with-mpi=/opt/mpich --prefix=$OPENSS_PREFIX
+
+# if Altix
+configure --prefix=$OPENSS_PREFIX
+
+
+make
+
+
+#mpirun -np 4 smg2000A/test/smg2000 -n 75 75 75
+#mpirun -np 4 smg2000B/test/smg2000 -n 75 75 75
+
+#mpirun -array openss hope,hope2 2 smg2000A/test/smg2000 -n 75 75 75  &
+#mpirun -array openss hope,hope2 2 smg2000B/test/smg2000 -n 75 75 75  &
+
+mpirun -array openss hope 1,hope2 2 smg2000A/test/smg2000 -n 75 75 75  &
+mpirun -array openss hope 1,hope2 2 smg2000B/test/smg2000 -n 75 75 75  &
+
+openss -cli -v mpi usertime -p nnnn
+
+
+cd sweep3d;
+make mpi
+cd sweep3d_A/
+mpirun -array openss hope 2,hope2 2 ./sweep3d.mpi &
+cd sweep3d_B/
+mpirun -array openss hope 2,hope2 2 ./sweep3d.mpi &
+
+openss -cli -v mpi usertime -p nnnn

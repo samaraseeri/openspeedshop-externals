@@ -1,0 +1,56 @@
+#%Module1.0#####################################################################
+##
+## openss-oss modulefile
+##
+proc ModulesHelp { } {
+        global version ossroot
+
+        puts stderr "\topenss - loads the OpenSpeedShop software execution environment"
+        puts stderr "\n\tThis adds $oss_prefix/* to several of the"
+        puts stderr "\texecution environment variables."
+        puts stderr "\n\tVersion $version\n"
+}
+
+module-whatis   "loads the OpenSpeedShop execution environment"
+
+
+# for Tcl script use only
+set     version         1.9.3.2
+set     oss        /users/jeg/oss
+set     home       /users/jeg
+
+setenv          OPENSS_PREFIX           $oss
+setenv          OPENSS_DOC_DIR          $oss/share/doc/packages/OpenSpeedShop
+setenv          XPLAT_RSH       ssh
+
+prepend-path    PATH                    $oss/bin
+prepend-path    MANPATH                 $oss/share/man
+
+eval set  [ array get env HOME ]
+set     ownmoddir       $HOME/privatemodules
+
+set unameexe  "/bin/uname"
+if { [file exists $unameexe] } {
+    set machinetype [ exec /bin/uname -m ]
+    if { $machinetype == "x86" ||
+         $machinetype == "i386" ||
+         $machinetype == "i486" ||
+         $machinetype == "i586" ||
+         $machinetype == "i686" } {
+        setenv  OPENSS_PLUGIN_PATH   $oss/lib/openspeedshop
+        setenv DYNINSTAPI_RT_LIB $oss/lib/libdyninstAPI_RT.so.1
+
+        prepend-path LD_LIBRARY_PATH $oss/lib
+    }
+    if { $machinetype == "x86_64" } {
+        setenv  OPENSS_PLUGIN_PATH   $oss/lib64/openspeedshop
+        setenv DYNINSTAPI_RT_LIB $oss/lib64/libdyninstAPI_RT.so.1
+        prepend-path LD_LIBRARY_PATH $oss/lib64
+    }
+    if { $machinetype == "ia64" } {
+        setenv  OPENSS_PLUGIN_PATH   $oss/lib/openspeedshop
+        setenv DYNINSTAPI_RT_LIB $oss/lib/libdyninstAPI_RT.so.1
+        prepend-path LD_LIBRARY_PATH $oss/lib
+    }
+}
+

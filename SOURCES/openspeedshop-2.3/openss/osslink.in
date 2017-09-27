@@ -1,0 +1,649 @@
+#! /bin/bash
+# Some of this code is inspired by the libmonitor package (monitor-link).
+#set -x
+debug_flag=0
+
+if [ -z "$OPENSS_DEBUG_OSSLINK" ]
+then
+  echo ""
+else
+  debug_flag=1
+  echo "DEBUG: turning DEBUG flag on because OPENSS_DEBUG_OSSLINK is set"
+fi
+
+mach_type=`uname -m`
+
+oss_target=@oss_targetos@
+
+if test "$mach_type" == "x86_64" ; then
+    machlibdir=lib64
+    altmachlibdir=lib
+elif test "$mach_type" == "ppc64" && test "$oss_target" == "bgq" ; then
+    machlibdir=lib64
+    altmachlibdir=lib
+else
+    machlibdir=lib
+    altmachlibdir=lib64
+fi
+
+# TODO: handle the target prefix
+oss_prefix=@ossinstalldir@
+oss_libdir="${oss_prefix}/${machlibdir}"
+oss_bindir="${oss_prefix}/bin"
+oss_plugins="${oss_libdir}/openspeedshop"
+
+libmonitor_prefix=@libmonitordir@
+libmonitor_libdir=@libmonitorlibdir@
+libmonitor="${libmonitor_libdir}/libmonitor_wrap.a"
+
+libunwind_prefix=@libunwinddir@
+libunwind_libdir=@libunwindlibdir@
+libunwind="${libunwind_libdir}/libunwind.a"
+
+libpapi_prefix=@papidir@
+libpapi_libdir=@papilibdir@
+libpapi="${libpapi_libdir}/libpapi.a"
+
+# monitor always has these
+
+# for the cray-xt5 we don't want system defined by default, not sure why
+# but undefining it using the -u arguments does not work.
+if test "${oss_target}" == "cray-xt5" || test "${oss_target}" == "cray-xt4" || test "${oss_target}" == "bgp"  ; then
+
+  monitor_wrap_base_names="main exit _exit"
+elif test "${mach_type}" == "ppc64" && test "${oss_target}" == "bgq"  ; then
+  monitor_wrap_base_names="main exit _exit system"
+else
+  monitor_wrap_base_names="main exit _exit system"
+fi
+
+# monitor has --enable-pthread
+if test "${mach_type}" == "ppc64" && test "${oss_target}" == "bgq"  ; then
+   monitor_wrap_pthread_names="pthread_create pthread_exit pthread_sigmask sigwaitinfo sigtimedwait"
+elif test "${oss_target}" == "cray-xe" || test "${oss_target}" == "cray-xk"  || test "${oss_target}" == "cray" ; then
+   monitor_wrap_pthread_names="pthread_create pthread_exit pthread_sigmask sigwaitinfo sigtimedwait"
+else
+   monitor_wrap_pthread_names="pthread_create pthread_exit pthread_sigmask"
+fi
+
+# monitor has --enable-fork
+monitor_wrap_fork_names="fork vfork execl execlp execle execv execvp execve"
+
+# monitor has --enable-dlfcn
+#
+# We changed monitor_wrap_dlopen_names list to be blank after several Cray platforms 
+# (DOD Crays and muzia at Sandia) needed this change.  
+# These routines are linked in dynamically now. (jeg 6-23-15)
+# was: monitor_wrap_dlopen_names="dlopen dlclose"
+# now:
+monitor_wrap_dlopen_names=""
+
+# monitor has --enable-signals
+monitor_wrap_signal_names="signal sigaction sigprocmask"
+# monitor has mpi. These are the base names for the non mpi collectors
+monitor_wrap_mpibase_names="MPI_Init MPI_Init_thread MPI_Finalize MPI_Comm_rank mpi_init mpi_init_thread mpi_finalize mpi_comm_rank mpi_init_ mpi_init_thread_ mpi_finalize_ mpi_comm_rank_ mpi_init__ mpi_init_thread__ mpi_finalize__ mpi_comm_rank__"
+
+# The following groupings are available
+monitor_wrap_mpi_asyncP2P="MPI_Cancel mpi_cancel mpi_cancel_ mpi_cancel__ MPI_Ibsend mpi_ibsend mpi_ibsend_ mpi_ibsend__ MPI_Iprobe mpi_iprobe mpi_iprobe_ mpi_iprobe__ MPI_Irecv mpi_irecv mpi_irecv_ mpi_irecv__ MPI_Irsend mpi_irsend mpi_irsend_ mpi_irsend__ MPI_Isend mpi_isend mpi_isend_ mpi_isend__ MPI_Request_free mpi_request_free mpi_request_free_ mpi_request_free__ MPI_Test mpi_test mpi_test_ mpi_test__ MPI_Testall mpi_testall mpi_testall_ mpi_testall__ MPI_Testany mpi_testany mpi_testany_ mpi_testany__ MPI_Testsome mpi_testsome mpi_testsome_ mpi_testsome__ MPI_Wait mpi_wait mpi_wait_ mpi_wait__ MPI_Waitall mpi_waitall mpi_waitall_ mpi_waitall__ MPI_Waitany mpi_waitany mpi_waitany_ mpi_waitany__ MPI_Waitsome mpi_waitsome mpi_waitsome_ mpi_waitsome__"
+monitor_wrap_mpi_collectives="MPI_Allgather mpi_allgather mpi_allgather_ mpi_allgather__ MPI_Allgatherv mpi_allgatherv mpi_allgatherv_ mpi_allgatherv_ MPI_Allreduce  mpi_allreduce mpi_allreduce_ mpi_allreduce__ MPI_Alltoall mpi_alltoall mpi_alltoall_ mpi_alltoall__ MPI_Alltoallv mpi_alltoallv mpi_alltoallv_ mpi_alltoallv__ MPI_Barrier mpi_barrier mpi_barrier_ mpi_barrier__ MPI_Bcast mpi_bcast mpi_bcast_ mpi_bcast__ MPI_Gather mpi_gather mpi_gather_ mpi_gather__ MPI_Gatherv mpi_gatherv mpi_gatherv_ mpi_gatherv__ MPI_Reduce mpi_reduce mpi_reduce_ mpi_reduce__ MPI_Reduce_scatter mpi_reduce_scatter mpi_reduce_scatter_ mpi_reduce_scatter__ MPI_Scan mpi_scan mpi_scan_ mpi_scan__ MPI_Scatter mpi_scatter mpi_scatter_ mpi_scatter__ MPI_Scatterv mpi_scatterv mpi_scatterv_ mpi_scatterv__"
+monitor_wrap_mpi_datatypes="MPI_Pack mpi_pack mpi_pack_ mpi_pack__ MPI_Unpack mpi_unpack mpi_unpack_ mpi_unpack__"
+monitor_wrap_mpi_environment="MPI_Finalize mpi_finalize mpi_finalize_ mpi_finalize__ MPI_Init mpi_init mpi_init_ mpi_init__"
+monitor_wrap_mpi_graphcontexts="MPI_Comm_create mpi_comm_create mpi_comm_create_ mpi_comm_create__ MPI_Comm_dup mpi_comm_dup mpi_comm_dup_ mpi_comm_dup__ MPI_Comm_free mpi_comm_free mpi_comm_free_ mpi_comm_free__ MPI_Comm_split mpi_comm_split mpi_comm_split_ mpi_comm_split__ MPI_Intercomm_create mpi_intercomm_create mpi_intercomm_create_ mpi_intercomm_create__ MPI_Intercomm_merge mpi_intercomm_merge mpi_intercomm_merge_ mpi_intercomm_merge__"
+monitor_wrap_mpi_persistent="MPI_Bsend_init mpi_bsend_init mpi_bsend_init_ mpi_bsend_init__ MPI_Recv_init mpi_recv_init mpi_recv_init_ mpi_recv_init__ MPI_Rsend_init mpi_rsend_init mpi_rsend_init_ mpi_rsend_init__ MPI_Send_init mpi_send_init mpi_send_init_ mpi_send_init__ MPI_Ssend_init mpi_ssend_init mpi_ssend_init_ mpi_ssend_init__ MPI_Start mpi_start mpi_start_ mpi_start__ MPI_Startall mpi_startall mpi_startall_ mpi_startall__"
+monitor_wrap_mpi_processtopologies="MPI_Cart_create MPI_Cart_sub MPI_Graph_create"
+monitor_wrap_mpi_syncP2P="MPI_Bsend mpi_bsend mpi_bsend_ mpi_bsend__ MPI_Get_count mpi_get_count mpi_get_count_ mpi_get_count__ MPI_Probe mpi_probe mpi_probe_ mpi_probe__  MPI_Recv mpi_recv mpi_recv_ mpi_recv__ MPI_Rsend mpi_rsend mpi_rsend_ mpi_rsend__ MPI_Send mpi_send mpi_send_ mpi_send__ MPI_Sendrecv mpi_sendrecv mpi_sendrecv_ mpi_sendrecv__ MPI_Sendrecv_replace mpi_sendrecv_replace mpi_sendrecv_replace_ mpi_sendrecv_replace__ MPI_Ssend mpi_ssend mpi_ssend_ mpi_ssend__"
+monitor_wrap_mpi_fileio="MPI_File_close mpi_file_close mpi_file_close_ mpi_file_close__ MPI_File_delete mpi_file_delete mpi_file_delete_ mpi_file_delete__ MPI_File_get_amode mpi_file_get_amode mpi_file_get_amode_ mpi_file_get_amode__ MPI_File_get_group mpi_file_get_group mpi_file_get_group_ mpi_file_get_group__ MPI_File_get_info mpi_file_get_info mpi_file_get_info_ mpi_file_get_info__ MPI_File_get_position mpi_file_get_position mpi_file_get_position_ mpi_file_get_position__ MPI_File_get_position_shared mpi_file_get_position_shared mpi_file_get_position_shared_ mpi_file_get_position_shared__ MPI_File_get_size mpi_file_get_size mpi_file_get_size_ mpi_file_get_size__ MPI_File_get_view mpi_file_get_view mpi_file_get_view_ mpi_file_get_view__ MPI_File_iread mpi_file_iread mpi_file_iread_ mpi_file_iread__ MPI_File_iread_at mpi_file_iread_at mpi_file_iread_at_ mpi_file_iread_at__ MPI_File_iread_shared mpi_file_iread_shared mpi_file_iread_shared_ mpi_file_iread_shared__ MPI_File_iwrite mpi_file_iwrite mpi_file_iwrite_ mpi_file_iwrite__ MPI_File_iwrite_at mpi_file_iwrite_at mpi_file_iwrite_at_ mpi_file_iwrite_at__ MPI_File_iwrite_shared mpi_file_iwrite_shared mpi_file_iwrite_shared_ mpi_file_iwrite_shared__ MPI_File_open mpi_file_open mpi_file_open_ mpi_file_open__ MPI_File_read mpi_file_read mpi_file_read_ mpi_file_read__ MPI_File_read_all mpi_file_read_all mpi_file_read_all_ mpi_file_read_all__ MPI_File_read_at mpi_file_read_at mpi_file_read_at_ mpi_file_read_at__ MPI_File_read_at_all mpi_file_read_at_all mpi_file_read_at_all_ mpi_file_read_at_all__ MPI_File_read_ordered mpi_file_read_ordered mpi_file_read_ordered_ mpi_file_read_ordered__ MPI_File_read_shared mpi_file_read_shared mpi_file_read_shared_ mpi_file_read_shared__ MPI_File_seek mpi_file_seek mpi_file_seek_ mpi_file_seek__ MPI_File_seek_shared mpi_file_seek_shared mpi_file_seek_shared_ mpi_file_seek_shared__ MPI_File_set_info mpi_file_set_info mpi_file_set_info_ mpi_file_set_info__ MPI_File_set_size mpi_file_set_size mpi_file_set_size_ mpi_file_set_size__ MPI_File_set_view mpi_file_set_view mpi_file_set_view_ mpi_file_set_view__ MPI_File_write mpi_file_write mpi_file_write_ mpi_file_write__ MPI_File_write_all mpi_file_write_all mpi_file_write_all_ mpi_file_write_all__ MPI_File_write_at mpi_file_write_at mpi_file_write_at_ mpi_file_write_at__ MPI_File_write_at_all mpi_file_write_at_all mpi_file_write_at_all_ mpi_file_write_at_all__ MPI_File_write_ordered mpi_file_write_ordered mpi_file_write_ordered_ mpi_file_write_ordered__ MPI_File_write_shared mpi_file_write_shared mpi_file_write_shared_ mpi_file_write_shared__"
+
+# The default for mpi collectors.
+monitor_wrap_mpi_only="${monitor_wrap_mpi_asyncP2P} ${monitor_wrap_mpi_collectives} ${monitor_wrap_mpi_datatypes} ${monitor_wrap_mpi_environment} ${monitor_wrap_mpi_graphcontexts} ${monitor_wrap_mpi_persistent} ${monitor_wrap_mpi_processtopologies} ${monitor_wrap_mpi_syncP2P} ${monitor_wrap_mpi_fileio}"
+
+monitor_wrap_mpi_mpit_mpiotf="${monitor_wrap_mpi_asyncP2P} ${monitor_wrap_mpi_collectives} ${monitor_wrap_mpi_datatypes} ${monitor_wrap_mpi_environment} ${monitor_wrap_mpi_graphcontexts} ${monitor_wrap_mpi_persistent} ${monitor_wrap_mpi_processtopologies} ${monitor_wrap_mpi_syncP2P}"
+
+if test "$mach_type" == "ppc64" && test "$oss_target" == "bgq" ; then
+  monitor_wrap_io_names="close creat creat64 dup dup2 lseek lseek64 open open64 pipe pread pread64 pwrite pwrite64 read readv write"
+else
+  monitor_wrap_io_names="close creat creat64 dup dup2 lseek lseek64 open open64 pipe pread pread64 pwrite pwrite64 read readv write writev"
+fi
+
+mpi_undefines=
+if test "$mach_type" == "ppc64" && test "$oss_target" == "bgq" ; then
+fork_undefines=execve
+else
+fork_undefines=
+fi
+pthread_undefines=
+
+static_collector=
+static_mpi_collector=
+
+mpi_plugin=
+output_dir=
+insert_files=
+
+default_mpi_impl=@default_mpi_impl@
+
+if [ -n "$OPENSS_MPI_IMPLEMENTATION" ]
+then
+    mpitouse=$OPENSS_MPI_IMPLEMENTATION
+else
+    mpitouse=`echo ${default_mpi_impl} |tr '[A-Z]' '[a-z]'`
+    export OPENSS_MPI_IMPLEMENTATION=$mpitouse
+fi
+
+# Space-separated list of object files to add.
+insert_files=
+
+# Space-separated list of extra symbol names to wrap.
+wrap_names=
+
+# Space-separated list of symbol names to force undefined.
+undef_names=
+
+# Space-separated list of extra library names, eg: "-ldl -lm".
+library_names=
+
+die()
+{
+    echo "$0: error: $*" 1>&2
+    exit 1
+}
+
+usage()
+{
+    cat <<EOF
+Usage: $0 -c collector [options] compiler file ...
+
+  -h, --help
+
+  -c, --collector  <collector name>
+Where collector is the name of the OpenSpeedShop
+collector to link into the application. See the
+openss manpage for a description of the available
+experiments provided by OpenSpeedShop. This is a
+mandatory option.
+
+  -i | --mpitype
+For MPI experiments, set the OPENSS_MPI_IMPLEMENTATION 
+environment variable to the MPI implementation type
+specified by one of these valid options:
+        mpich
+        mpich2
+        mvapich
+        mvapich2
+        openmpi
+        mpt
+        lam
+        lampi
+
+This value should correspond to the MPI implementation
+that was used to create the application being run through
+osslink.
+
+  -v, --verbose
+
+
+EOF
+    exit 0
+}
+
+verbose=no
+
+while test "x$1" != x
+do
+    case "$1" in
+
+        -h | --help )
+            usage
+            ;;
+
+        -c | --collector)
+            test "x$2" != x || die "missing argument: $*"
+            case "$2" in
+                pcsamp )        collector="$2" ;;
+                hwc )           collector="$2" ;;
+                usertime )      collector="$2" ;;
+                hwctime )       collector="$2" ;;
+                hwcsamp )       collector="$2" ;;
+                io )            collector="$2" ;;
+                iot )           collector="$2" ;;
+                mpi )           collector="$2" ;;
+                mpit )          collector="$2" ;;
+                mpiotf )        collector="$2" ;;
+                fpe )           collector="$2" ;;
+            esac
+            shift ; shift
+            ;;
+
+        -i | --mpitype)
+            test "x$2" != x || die "missing argument: $*"
+            case "$2" in
+                mpich )        mpitouse="$2" ;;
+                mpich2 )        mpitouse="$2" ;;
+                mvapich )        mpitouse="$2" ;;
+                mvapich2 )        mpitouse="$2" ;;
+                openmpi )        mpitouse="$2" ;;
+                mpt )        mpitouse="$2" ;;
+                lam )        mpitouse="$2" ;;
+                lampi )        mpitouse="$2" ;;
+            esac
+	    export OPENSS_MPI_IMPLEMENTATION=$mpitouse
+            shift ; shift
+            ;;
+
+        -p | --pluginpath)
+            test "x$2" != x || die "missing argument: $*"
+            case "$2" in
+                /* )  dir="$2" ;;
+                * )   dir="`pwd`/$2" ;;
+            esac
+            test -d "$dir" || die "unable to find: $dir"
+            export OPENSS_PLUGIN_PATH="${dir}"
+	    oss_plugins="${dir}"
+            shift ; shift
+            ;;
+
+
+        -v | --verbose )
+            verbose=yes
+            shift
+            ;;
+
+        -u | --undefined )
+            test "x$2" != x || die "missing argument: $*"
+            undef_names="${undef_names} $2"
+            shift ; shift
+            ;;
+
+        -w | --wrap )
+            test "x$2" != x || die "missing argument: $*"
+            wrap_names="${wrap_names} $2"
+            shift ; shift
+            ;;
+
+        -- )
+            shift
+            break
+            ;;
+
+        -* )
+            die "unknown option: $1"
+            ;;
+
+        * )
+            break
+            ;;
+    esac
+done
+
+static_offline=${oss_libdir}/libopenss-runtime-offline.a
+monitor_callbacks=${oss_plugins}/offline_monitor.o
+
+#
+# Must have a compiler command and at least one argument.
+#
+test "x$2" != x || usage
+command="$1"
+shift
+
+#
+# Duplicate the -l<lib> arguments.
+#
+appl_libs=
+for lib in "$@"
+do
+    case "$lib" in
+        -l?* ) appl_libs="$appl_libs $lib" ;;
+    esac
+done
+
+monitor_has_fork=`nm ${libmonitor} | grep -i __wrap_fork`
+monitor_has_signals=`nm ${libmonitor} | grep -i __wrap_signal`
+monitor_has_pthreads=`nm ${libmonitor} | grep -i __wrap_pthread_create`
+monitor_has_dlopen=`nm ${libmonitor} | grep -i __wrap_dlopen`
+monitor_has_mpi=`nm ${libmonitor} | grep -i __wrap_mpi_init`
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  if [ -n "$monitor_has_fork" ]
+  then
+    echo "DEBUG: osslink monitor_has_fork is non-null"
+  fi
+  if [ -n "$monitor_has_signals" ]
+  then
+    echo "DEBUG: osslink monitor_has_signals is non-null"
+  fi
+  if [ -n "$monitor_has_pthreads" ]
+  then
+    echo "DEBUG: osslink monitor_has_pthreads is non-null"
+  fi
+  if [ -n "$monitor_has_dlopen" ]
+  then
+    echo "DEBUG: osslink monitor_has_dlopen is non-null"
+  fi
+  if [ -n "$monitor_has_mpi" ]
+  then
+    echo "DEBUG: osslink monitor_has_mpi = $monitor_has_mpi"
+  fi
+  echo
+fi
+
+
+collector_libs=""
+
+if [[ $command == *mpix* ]]
+then
+  static_args="  "
+else
+  static_args=" -static "
+fi
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  echo "DEBUG: osslink static_args = $static_args"
+fi
+
+wrap_args=
+for name in $monitor_wrap_base_names $wrap_names
+do
+    wrap_args="${wrap_args} -Wl,--wrap,${name}"
+done
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  echo "DEBUG: osslink wrap_args for monitor_wrap_base_names = $wrap_args"
+fi
+
+
+if [ -n "$monitor_has_fork" ]
+then
+    for name in $monitor_wrap_fork_names
+    do
+	wrap_args="${wrap_args} -Wl,--wrap,${name}"
+    done
+fi
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  echo "DEBUG: osslink wrap_args for monitor_wrap_fork_names = $wrap_args"
+fi
+
+
+if [ -n "$monitor_has_signals" ]
+then
+    for name in $monitor_wrap_signal_names
+    do
+	wrap_args="${wrap_args} -Wl,--wrap,${name}"
+    done
+fi
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  echo "DEBUG: osslink wrap_args for monitor_wrap_signal_names = $wrap_args"
+fi
+
+
+if [ -n "$monitor_has_pthreads" ]
+then
+    for name in $monitor_wrap_pthread_names
+    do
+	wrap_args="${wrap_args} -Wl,--wrap,${name}"
+    done
+    collector_libs="${collector_libs} -lpthread"
+fi
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  echo "DEBUG: osslink wrap_args for monitor_wrap_pthread_names = $wrap_args"
+  echo "DEBUG: osslink collector_libs for monitor_wrap_pthread_names = $collector_libs"
+fi
+
+
+if [ -n "$monitor_has_dlopen" ]
+then
+    for name in $monitor_wrap_dlopen_names
+    do
+	wrap_args="${wrap_args} -Wl,--wrap,${name}"
+    done
+    collector_libs="${collector_libs} -ldl"
+fi
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  echo "DEBUG: osslink wrap_args for monitor_wrap_dlopen_names = $wrap_args"
+  echo "DEBUG: osslink collector_libs for monitor_wrap_dlopen_names = $collector_libs"
+fi
+
+
+if [ -n "$monitor_has_mpi" ]
+then
+    for name in $monitor_wrap_mpibase_names
+    do
+	wrap_args="${wrap_args} -Wl,--wrap,${name}"
+    done
+fi
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  echo "DEBUG: osslink wrap_args for monitor_wrap_mpibase_names = $wrap_args"
+fi
+
+undef_args=
+for name in $undef_names
+do
+    undef_args="${undef_args} -Wl,-u,__wrap_${name}"
+done
+
+
+for name in $mpi_undefines
+do
+    undef_args="${undef_args} -Wl,-u,__wrap_${name}"
+    echo
+done
+
+for name in $fork_undefines
+do
+    undef_args="${undef_args} -Wl,-u,__wrap_${name}"
+done
+
+for name in $pthread_undefines
+do
+    undef_args="${undef_args} -Wl,-u,__wrap_${name}"
+done
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  echo "DEBUG: osslink oss_target = $oss_target"
+fi
+
+# Need to undefine certain functions for cray (now generic symbol for cray-xe, cray-xk, and newer) because of link ordering
+# Leaving in cray-xt*, cray-xe, cray-xk for historical reasons but moving builders toward using the generic "cray" machine type
+if test "${oss_target}" == "cray" ; then
+   undef_args="${undef_args} -Wl,-u,__wrap_fork"
+   undef_args="${undef_args} -Wl,-u,__wrap_pthread_create"
+   undef_args="${undef_args} -Wl,-u,__wrap_open"
+fi
+
+# Need to undefine certain functions for cray-xk because of link ordering
+if test "${oss_target}" == "cray-xk" ; then
+   undef_args="${undef_args} -Wl,-u,__wrap_fork"
+   undef_args="${undef_args} -Wl,-u,__wrap_pthread_create"
+   undef_args="${undef_args} -Wl,-u,__wrap_open"
+fi
+
+
+# Need to undefine certain functions for cray-xe because of link ordering
+if test "${oss_target}" == "cray-xe" ; then
+   undef_args="${undef_args} -Wl,-u,__wrap_fork"
+   undef_args="${undef_args} -Wl,-u,__wrap_pthread_create"
+   undef_args="${undef_args} -Wl,-u,__wrap_open"
+fi
+
+# Need to undefine certain functions for cray-xt5 because of link ordering
+if test "${oss_target}" == "cray-xt5" ; then
+   #undef_args="${undef_args} -Wl,-u,__wrap_fork"
+   undef_args="${undef_args} -Wl,-u,__wrap_pthread_create"
+fi
+
+# Need to undefine certain functions for cray-xt4 because of link ordering
+if test "${oss_target}" == "cray-xt4" ; then
+   undef_args="${undef_args} -Wl,-u,__wrap_fork"
+   undef_args="${undef_args} -Wl,-u,__wrap_pthread_create"
+fi
+
+# to undefine certain functions for bgl because of link ordering
+if test "${oss_target}" == "bgl" ; then
+#   undef_args="${undef_args} -Wl,-u,__wrap_fork"
+   undef_args="${undef_args} -Wl,-u,__wrap_pthread_create"
+   undef_args="${undef_args} -Wl,-u,__wrap_open"
+fi
+
+# to undefine certain functions for bgp because of link ordering
+if test "${oss_target}" == "bgp" ; then
+#   undef_args="${undef_args} -Wl,-u,__wrap_fork"
+   undef_args="${undef_args} -Wl,-u,__wrap_pthread_create"
+   undef_args="${undef_args} -Wl,-u,__wrap_open"
+fi
+
+# to undefine certain functions for bgq because of link ordering
+if test "${oss_target}" == "bgq" ; then
+#   undef_args="${undef_args} -Wl,-u,__wrap_fork"
+   undef_args="${undef_args} -Wl,-u,__wrap_pthread_create"
+   undef_args="${undef_args} -Wl,-u,__wrap_open"
+fi
+
+if [ $debug_flag == 1 ]
+then
+  echo
+  echo "DEBUG: osslink collector = $collector"
+fi
+
+monitor_wrap_list=$monitor_wrap_mpit_mpiotf
+case "$collector" in
+    mpi|mpit|mpiotf )
+    static_collector=${oss_plugins}/lib${collector}-${mpitouse}-offline.a
+    collector_libs="${collector_libs} -lrt -L ${oss_libdir} -lopenss-runtime-unwind -L ${libunwind_libdir} -lunwind"
+
+    if test "$collector" == "mpi" ; then
+	monitor_wrap_list=$monitor_wrap_mpi_only
+    fi
+
+    if [ -n "$monitor_has_mpi" ]
+    then
+	for name in $monitor_wrap_list
+	do
+	    wrap_args="${wrap_args} -Wl,--wrap,${name}"
+	done
+    fi
+    ;;
+
+    mpi-*|mpit-*|mpiotf-*)
+    static_collector=${oss_plugins}/lib${collector}-${mpitouse}-offline.a
+    collector_libs="${collector_libs} -lrt -L ${oss_libdir} -lopenss-runtime-unwind -L ${libunwind_libdir} -lunwind"
+
+    if test "$collector" == "mpi-*" ; then
+	monitor_wrap_list=$monitor_wrap_mpi_only
+    fi
+
+    if [ -n "$monitor_has_mpi" ]
+    then
+	for name in $monitor_wrap_list
+	do
+	    wrap_args="${wrap_args} -Wl,--wrap,${name}"
+	done
+    fi
+    ;;
+
+
+    # The non mpi tracing experiments need to trace MPI_Init to
+    # gather the mpi rank information needed for the mpi_rank field
+    # in the THREADS table of the openss database.
+    #
+    # We changed the hwc experiment link lines after several Cray platforms (DOD Crays and muzia at Sandia)
+    # needed the change to include the dl routines from libdl.so. The dl routines are now linked in dyamically. (jeg 6-23-15)
+    #
+    pcsamp)
+
+    static_collector=${oss_plugins}/lib${collector}-offline.a
+    collector_libs="${collector_libs} -lrt"
+    ;;
+
+    usertime)
+    static_collector=${oss_plugins}/lib${collector}-offline.a
+    collector_libs="${collector_libs} -lrt -L ${oss_libdir} -lopenss-runtime-unwind -L ${libunwind_libdir} -lunwind"
+    ;;
+    hwc)
+    static_collector=${oss_plugins}/lib${collector}-offline.a
+    collector_libs="${collector_libs} -lrt -L ${oss_libdir} -lopenss-runtime-papi -L ${libpapi_libdir} -lpapi -ldl"
+    ;;
+    hwctime)
+    static_collector=${oss_plugins}/lib${collector}-offline.a
+    collector_libs="${collector_libs} -lrt -L ${oss_libdir} -lopenss-runtime-papi -lopenss-runtime-unwind -L ${libpapi_libdir} -lpapi -L ${libunwind_libdir} -lunwind -ldl"
+    ;;
+    hwcsamp)
+    static_collector=${oss_plugins}/lib${collector}-offline.a
+    collector_libs="${collector_libs} -lrt -L ${oss_libdir} -lopenss-runtime-papi -L ${libpapi_libdir} -lpapi -ldl"
+    ;;
+    io | iot)
+    static_collector=${oss_plugins}/lib${collector}-offline.a
+    collector_libs="${collector_libs} -lrt -L ${oss_libdir} -lopenss-runtime-unwind -L ${libunwind_libdir} -lunwind"
+    for name in $monitor_wrap_io_names
+    do
+	wrap_args="${wrap_args} -Wl,--wrap,${name}"
+    done
+
+    # Need to undefine open for io and iot for cray-xt4
+    if test "${oss_target}" == "cray-xt4" ; then
+       undef_args="${undef_args} -Wl,-u,__wrap_open"
+    fi
+
+    # Need to undefine open for io and iot for cray-xt5
+    if test "${oss_target}" == "cray-xt5" ; then
+       undef_args="${undef_args} -Wl,-u,__wrap_open"
+    fi
+    ;;
+    fpe )
+    static_collector=${oss_plugins}/lib${collector}-offline.a
+    collector_libs="${collector_libs} -lrt -L ${oss_libdir} -lopenss-runtime-unwind -lopenss-runtime-binutils -L ${libunwind_libdir} -lunwind -lbfd -liberty -lopcodes -lz -lm"
+    ;;
+esac
+    if [ $debug_flag == 1 ]
+    then
+      echo
+      echo "DEBUG: osslink (after collector setup) collector collector=$collector"
+      echo "DEBUG: osslink (after collector setup) collector static_collector=$static_collector"
+      echo "DEBUG: osslink (after collector setup) collector collector_libs=$collector_libs"
+    fi
+
+insert_files="$monitor_callbacks $static_collector $static_offline"
+mon_args="${insert_files} ${libmonitor} ${appl_libs} ${library_names}"
+# The flag represented by special_args is needed to make the eh_frame_hdr section available.
+# eh_frame_hdr section is needed to unwind properly.
+# The .eh_frame sections hold unwind information that aids in unwinding through stackframes.
+# This was found on the Cray platforms: cray-xe and cray-xk
+special_args="-Wl,--eh-frame-hdr"
+
+if test "$verbose" = yes ; then
+    echo "$0, new command line: " $command $static_args $wrap_args $undef_args "$@" $special_args $mon_args $collector_libs
+fi
+
+exec $command $static_args $wrap_args $undef_args "$@" $special_args $mon_args $collector_libs
+
+
+if test "${oss_target}" == "cray-xt4" || 
+   test "${oss_target}" == "cray-xt5"  || 
+   test "${oss_target}" == "cray-xe"  || 
+   test "${oss_target}" == "cray-xk"  || 
+   test "${oss_target}" == "cray" ; then
+      echo
+      echo "NOTE: The aprun -bb option is required when running the executable produced by osslink"
+      echo
+fi

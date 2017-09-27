@@ -1,0 +1,3 @@
+main(fpetest: fpetest.c,5)
+_libc_start_main(libc.so.6)
+_start(fpetest)

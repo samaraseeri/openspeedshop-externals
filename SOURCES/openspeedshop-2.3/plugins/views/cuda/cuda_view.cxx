@@ -1,0 +1,250 @@
+////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2014 Krell Institute. All Rights Reserved.
+// Copyright (c) 2014-2017 Argo Navis Technologies. All Rights Reserved.
+//
+// This library is free software; you can redistribute it and/or modify it under
+// the terms of the GNU Lesser General Public License as published by the Free
+// Software Foundation; either version 2.1 of the License, or (at your option)
+// any later version.
+//
+// This library is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this library; if not, write to the Free Software Foundation, Inc.,
+// 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+////////////////////////////////////////////////////////////////////////////////
+
+#include <boost/cstdint.hpp>
+
+#include "SS_Input_Manager.hxx"
+#include "SS_View_Expr.hxx"
+
+
+
+extern bool generate_cuda_exec_view(CommandObject*, ExperimentObject*,
+                                    boost::int64_t, ThreadGroup&,
+                                    std::list<CommandResult*>&);
+
+extern bool generate_cuda_hwpc_view(CommandObject*, ExperimentObject*,
+                                    boost::int64_t, ThreadGroup&,
+                                    std::list<CommandResult*>&);
+
+extern bool generate_cuda_xfer_view(CommandObject*, ExperimentObject*,
+                                    boost::int64_t, ThreadGroup&,
+                                    std::list<CommandResult*>&);
+
+
+
+static const std::string kName = "cuda";
+static const std::string kBrief = "CUDA Performance Report";
+static const std::string kShort = 
+    "Report CUDA kernel execution, CUDA data transfer, and CPU/GPU hardware\n"
+    "performance counter data gathered by the 'cuda' collector.\n";
+
+static const std::string kLong  =
+    "\n"
+    "A positive integer may be added to the end of the keyword 'cuda' to\n"
+    "indicate the maximum number of items to report. When the '-v Trace'\n"
+    "option is given, the selected items are those that use the most time.\n"
+    "In all other cases the selection is based on the values displayed in\n"
+    "the report's leftmost column.\n"
+    "\n"
+    "The type of data displayed can be controlled through the '-v' options:\n"
+    "\n"
+    "    Exec     CUDA kernel executions (this is the default)\n"
+    "    Xfer     CUDA data transfers\n"
+    "    HWPC     CPU/GPU hardware performance counters\n"
+    "\n"
+    "The form of the displayed infomation is controlled thru additional '-v'\n"
+    "options. For '-v Exec' and '-v Xfer' these additional '-v' options are:\n"
+    "\n"
+    "    ButterFly                Produces a report summarizing the calls to\n"
+    "                             and from the one or more functions specified\n"
+    "                             by the '-f <function_list>' option. Calling\n"
+    "                             functions will be listed before the named\n"
+    "                             function, and called functions afterwards,\n"
+    "                             by default, unless 'TraceBacks' is specified\n"
+    "                             to reverse this ordering.\n"
+    "\n"
+    "    CallTree[s]              Produces a calling stack report presented'\n"
+    "                             in calling tree order, from the executable's\n"
+    "                             start toward the measurement locations.\n"
+    "\n"
+    "    (DSO|LinkedObject)[s]    Produces a summary report by linked object.\n"
+    "\n"
+    "    FullStack[s]             Causes the report to include the full call\n"
+    "                             stack for each measurement location when\n"
+    "                             added to either 'CallTree' or 'TraceBack'.\n"
+    "                             Redundant call stack frames are suppressed\n"
+    "                             by default if this option isn't specified.\n"
+    "\n"
+    "    Function[s]              Produces a summary report by function.\n"
+    "                             This is the default.\n"
+    "\n"    
+    "    Loop[s]                  Produces a summary report by loop.\n"
+    "\n"
+    "    Statement[s]             Produces a summary report by statement.\n"
+    "\n"
+    "    Summary                  Causes the report to include an additional\n"
+    "                             line of output at the end that summarizes\n"
+    "                             the information in each column. Does not\n"
+    "                             apply to 'ButterFly' or 'Trace'.\n"
+    "\n"
+    "    SummaryOnly              Causes the report to ONLY include the line\n"
+    "                             of output generated by 'Summary'.\n"
+    "\n"
+    "    Trace                    Produces a report of each individual CUDA\n"
+    "                             kernel execution or data transfer, sorted in\n"
+    "                             ascending order of the event's start time.\n"
+    "\n"
+    "    TraceBack[s]             Produces a calling stack report presented\n"
+    "                             in traceback order, from the measurement\n"
+    "                             locations toward the executable's start.\n"
+    "\n"
+    "Except for the '-v Trace' option, the report will be sorted in descending\n"
+    "order of the values in the leftmost column. Multiple '-v' values can be\n"
+    "delimited with commas. E.g. '-v Exec,Trace'.\n"
+    "\n"
+    "Finally, the columns included in the report can be controlled using the\n"
+    "'-m' option. More than one column may be specified in a comma-delimited\n"
+    "list. And when '-m' is used, ONLY those columns specified are reported,\n"
+    "in order they are given.\n"
+    "\n"
+    "The following '-m' options are available for '-v [Exec|Xfer]':\n"
+    "\n"
+    "    [%][exclusive_]count[s]    Exclusive number of events\n"
+    "    [%]inclusive_count[s]      Inclusive number of events\n"
+    "    [%][exclusive_]time[s]     Exclusive time in the event\n"
+    "    [%]inclusive_time[s]       Inclusve time in the event\n"
+    "    min[imum]                  Minimum time in the event\n"
+    "    max[imum]                  Maximum time in the event\n"
+    "    avg|average                Average time in the event\n"
+    "    stddev                     Standard deviation of time in the event\n"
+    "\n"
+    "    ThreadMin                  Minimum accumulated time for a process\n"
+    "    ThreadMinIndex             Process ID of the 'ThreadMin' process\n"
+    "    ThreadMax                  Maximum accumulated time for a process\n"
+    "    ThreadMaxIndex             Process ID of the 'ThreadMax process'\n"
+    "    ThreadAverage              Average accumulated time for a process\n"
+    "\n"
+    "    LoadBalance                Equivalent to 'ThreadMax,ThreadMaxIndex,\n"
+    "                               ThreadMin,ThreadMinIndex,ThreadAverage'.\n"
+    "\n"
+    "The following '-m' options are only available for '-v [Exec|Xfer],Trace':\n"
+    "\n"
+    "    (start|stop)[_time]    Start or stop time for the event\n"
+    "\n"
+    "The following '-m' options are only available for '-v Exec,Trace':\n"
+    "\n"
+    "    block    Dimensions of each block\n"
+    "    cache    Cache preference used\n"
+    "    dsm      Total amount (in bytes) of dynamic shared memory reserved\n"
+    "    grid     Dimensions of the grid\n"
+    "    lm       Total amount (in bytes) of local memory reserved\n"
+    "    rpt      Registers required for each thread\n"
+    "    ssm      Total amount (in bytes) of static shared reserved\n"
+    "\n"
+    "The following '-m' options are only available for '-v Xfer,Trace':\n"
+    "\n"
+    "    size     Number of bytes being transferred\n"
+    "    kind     Kind of data transfer performed\n"
+    "    src      Kind of memory from which the data transfer was performed\n"
+    "    dest     Kind of memory to which the data transfer was performed\n"
+    "    async    Was the data transfer asynchronous?\n"
+    "\n"
+    "The default columns used for various '-v' combinations are:\n"
+    "\n"
+    "    -v Exec,Trace                   -m start,time,%time,grid,block\n"
+    "    -v Xfer,Trace                   -m start,time,%time,size,kind\n"
+    "    -v (Exec|Xfer),Butterfly        -m inclusive_time,%inclusive_time\n"
+    "    -v (Exec|Xfer)[,<all-other>]    -m time,%time,count\n"
+    "\n"
+    "The '-v HWPC' view works differently in that it only displays the sampled\n"
+    "CPU/GPU hardware performance counters as a function of time. I.e. it does\n"
+    "not display data as a function of source code constructs. Thus only the\n"
+    "'-v Summary' and '-v SummaryOnly' options apply.\n"
+    "\n"
+    "It also interprets the positive integer added to the end of the keyword\n"
+    "'cuda' differently. Instead of being the maximum number of reported items\n"
+    "it specifies the fixed sampling interval (in ms) at which the data should\n"
+    "be resampled before display. The default value (0) is given the special\n"
+    "meaning that the original sampling interval should be used instead.\n"
+    "\n";
+
+static const std::string kExample =
+    "\texpView cuda\n"
+    "\texpView -v Xfer,CallTrees,FullStack cuda10 -m min,max,count\n"
+    "\texpView -v HWPC,Summary cuda33\n"
+    "\n";
+
+static const std::string kCollectors[] = { "cuda", "" };
+
+static std::string kMetrics[] = {
+    "cuda::count_exclusive_details",
+    "cuda::exec_exclusive_details",
+    "cuda::exec_inclusive_details",
+    "cuda::exec_time",
+    "cuda::xfer_exclusive_details",
+    "cuda::xfer_inclusive_details",
+    "cuda::xfer_time",
+    ""
+};
+
+
+
+class cuda_view :
+    public ViewType
+{
+    
+public: 
+
+    cuda_view() : 
+        ViewType(kName, kBrief, kShort, kLong, kExample,
+                 const_cast<std::string*>(&kMetrics[0]),
+                 const_cast<std::string*>(&kCollectors[0]),
+                 true)
+    {
+    }
+    
+    virtual bool GenerateView(CommandObject* command,
+                              ExperimentObject* experiment,
+                              boost::int64_t top_n,
+                              ThreadGroup& threads,
+                              std::list<CommandResult*>& view)
+    {
+        // Select the appropriate sub-view
+        if (Look_For_KeyWord(command, "Exec"))
+        {
+            return generate_cuda_exec_view(
+                command, experiment, top_n, threads, view
+                );
+        }
+        else if (Look_For_KeyWord(command, "HWPC"))
+        {
+            return generate_cuda_hwpc_view(
+                command, experiment, top_n, threads, view
+                );
+        }
+        else if (Look_For_KeyWord(command, "Xfer"))
+        {
+            return generate_cuda_xfer_view(
+                command, experiment, top_n, threads, view
+                );
+        }
+        
+        return generate_cuda_exec_view(
+            command, experiment, top_n, threads, view
+            );
+    }
+    
+}; // class cuda_view
+
+
+
+extern "C" void cuda_view_LTX_ViewFactory()
+{
+    Define_New_View(new cuda_view());
+}

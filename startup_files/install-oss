@@ -1,0 +1,179 @@
+#!/bin/bash
+# This is the program users should invoke to build and install
+# OpensSpeedShop and its supporting components.
+die()
+{
+    echo "$0: error: $*" 1>&2
+    exit 1
+}
+
+usage() {
+    cat << EOF
+usage: $0 [option]
+
+-h, --help
+This help text.
+
+--install-prefix <directory>
+Where directory is the location to install OpenSpeedShop
+and it's supporting tools and libraries. The default
+is /opt/OSS. It is not recommended to use /usr.
+NOTE: This option will override any setting for
+the environment variable OPENSS_PREFIX.
+
+--gui-only
+Only build the compnents needed to build an OpenSpeedShop
+capable of view openss database files.
+
+--runtime-only
+Only build the compnents needed to build the OpenSpeedShop
+collector runtime components.
+
+--exclude-oss
+For developers who will build the OpenSpeedShop source
+from the CVS sources. The default is to build OpenSpeedShop
+from the tarball provided in the OpenSpeedShop_ROOT/SOURCES.
+
+--enable-online
+For users who wich to build the online support packages
+(dyninst and mrnet).  The default is disabled.
+
+--with-mpich <directory>
+--with-mpich2  <directory>
+--with-mvapich  <directory>
+--with-mvapich2  <directory>
+--with-openmpi  <directory>
+--with-mpt  <directory>
+Where directory is the installed path to the mpi implementation
+to use for MPI support.
+EOF
+}
+
+build_online=
+exclude_oss=
+openss_gui_only=
+runtime_gui_only=
+while test "x$1" != x
+do
+    case "$1" in
+       -h | --help)
+            usage
+            exit
+	    ;;
+
+       --gui-only)
+            export OPENSS_INSTRUMENTOR="none"
+	    build_online=""
+	    openss_gui_only="--gui-only"
+            shift
+	    ;;
+
+       --runtime-only)
+	    openss_runtime_only="--runtime-only"
+            shift
+	    ;;
+
+       --enable-online)
+            export OPENSS_INSTRUMENTOR="mrnet"
+	    build_online="--with-online"
+            shift
+	    ;;
+
+       --exclude-oss)
+	    exclude_oss="--exclude-oss"
+            shift
+	    ;;
+
+       --install-prefix)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_PREFIX="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mpich)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MPICH="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mpich2)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MPICH2="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mvapich)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MVAPICH="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mvapich2)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MVAPICH2="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-openmpi)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_OPENMPI="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mpt)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MPT="${dir}"
+            shift ; shift
+	    ;;
+
+        -- )
+            shift
+            break
+            ;;
+
+        -* )
+            die "unknown option: $1"
+            ;;
+
+        * )
+            break
+            ;;
+    esac
+done
+
+./install.sh $build_online $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9

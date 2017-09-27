@@ -1,0 +1,186 @@
+.\" Process this file with
+.\" groff -man -Tascii osscompare.1
+.\"
+.TH OSSCOMPARE 1 "JANUARY 2017" Linux "User Manuals"
+.SH NAME
+osscompare \- Open|SpeedShop compare experiments script
+.SH SYNOPSIS
+.nf
+.IP "osscompare "database_file, database_file [, database_file .... ] "
+.fi
+
+.SH TYPICAL USAGE FORM
+.nf
+
+osscompare "database_file, database_file" [ time, percent, <other metrics> ] 
+
+For example:
+
+osscompare "smg2000-pcsamp-64.openss, smg2000-pcsamp-128.openss"  percent
+osscompare "smg2000-hwcsamp-1.openss, smg2000-hwcsamp-2.openss"  PAPI_L1_DCM
+
+.fi
+.SH DESCRIPTION
+.B osscompare
+
+osscompare is a convenience command script that invokes the 
+Open|SpeedShop application level performance tool to compare 
+multiple Open|SpeedShop database files to eachother.  A side-by-side
+comparison report is generated from the database files that are specified.
+
+Information that is presented after the execution of the osscompare
+experiment is exclusive CPU time or optionally, percentage of time spent
+in each function, for all the functions in the application across all the
+database files specified on the command line. Other metrics are also available
+depending on the experiment.  For the hardware counter sampling experiment 
+(hwcsamp), the PAPI event name may be specified as the metric, for example:
+PAPI_TOT_CYC or PAPI_L1_DCM.
+
+Also, osscompare supports the "rows" option which limits the output to a
+specific number of lines of output.  There is a "viewtype" option which allows
+the comparison to be done using either function level, statement level, or
+library (linkedobjects) level granuality.  Function level is the default.
+The "oname" option lets the user name the output file names if the OPENSS_CREATE_CSV
+environment variable is set.
+
+.SH OPTIONS
+
+osscompare "database_file, database_file" [ time, percent, <other metrics> ] [rows=nn] [viewtype=[functions|statements|linkedobjects]] [oname=<output filename>]
+
+.IP " ""database file"" "
+This option specifies a database file that was previously created with
+Open|SpeedShop and is a valid database file.
+
+At this time the limit for database files that can be specified on one
+osscompare command is eight (8).
+
+For example:
+
+        "smg2000-pcsamp-64.openss, smg2000-pcsamp-128.openss" 
+
+or
+
+        "smg2000-pcsamp-64.openss, smg2000-pcsamp-128.openss, smg2000-pcsamp-256.openss" 
+
+Open|SpeedShop requires quotes around the database files.
+
+.IP """time"""
+Compare by exclusive time.  This is the default.
+
+.IP """percent"""
+Compare by the percentage for the aggregated exclusive CPU time across all the functions 
+in the application
+
+.IP "-m metrics are allowed"
+Any acceptable/valid metric (-m) expview option can be used to override the default values of time and percent.  This includes hardware counter values in the hwcsamp experiment.  For example, if you gathered data for a few counters, including PAPI_FP_OPS, you could specify: PAPI_FP_OPS as the comparison metric.  Or one could specify another of the other counter events.
+
+
+.IP "rows=nn"
+Limit the number of rows of comparison data output to a specific number, which will include 
+the most significant differences.  The most significant differences will always be the first
+few lines of the output.   So, setting rows=10 will give the top ten lines representing the most
+significant variation output from the comparison.
+
+.IP "viewtype=[functions|statements|linkedobjects]"
+
+Specify the view granualarity.  Compare based on the function, statement, or library level.
+Function level is the default.  So, by default the compare will be done comparing the performance
+of functions in each of the databases.  If statments is specified then all the comparisons will
+be made by looking at the performance of each statement in all the databases that are specified.
+Similar for libraries, if linkedobject is selected as the viewtype parameter.
+
+.IP "oname=<output file name>"
+
+Specify the name of the comma separated list and compare text files which are created if the
+OPENSS_CREATE_CSV environment is set.
+
+.IP """<no arguments>"""
+If no optional arguments are specified then the default comparison metric is exclusive
+time.
+
+
+.SH FILES
+.IP ~/.qt/openspeedshoprc
+.RS
+The Open|SpeedShop preference configuration file which is 
+accessed through the Open|SpeedShop GUI Preferences menu item.
+This file contains several options which allow the user to 
+configure Open|SpeedShop to better fit their needs.
+
+See the Open|SpeedShop Users Guide for full details on the
+preferences available.
+.RE
+
+.SH ENVIRONMENT
+
+.IP OPENSS_CREATE_CSV
+This environment variable indicates to osscompare to create a
+comparison file that contains the comparison output separated
+by commas.  The name of the file will be the concatenated names 
+of all the database files with a .csv suffix.
+
+.SH DIAGNOSTICS
+The following diagnostics may be TBD:
+
+.SH QUICK START EXAMPLE
+In this example the two smg2000 application program counter sampling (pcsamp)
+experiments will be compared to each other and a side-by-side report will be
+generated.
+
+.nf
+osscompare "smg2000-pcsamp-4.openss, smg2000-pcsamp-5.openss" 
+
+produces a report similar to this:
+
+[openss]: Legend: -c 2 represents smg2000-pcsamp-4.openss
+[openss]: Legend: -c 4 represents smg2000-pcsamp-5.openss
+
+ -c 2, Exclusive CPU   -c 4, Exclusive CPU  Function (defining location)
+    time in seconds.      time in seconds.                      
+            9.150000              9.310000  hypre_SMGResidual (smg2000: smg_residual.c,152)
+            6.080000              5.940000  hypre_CyclicReduction (smg2000: cyclic_reduction.c,757)
+            0.500000              0.500000  hypre_SemiInterp (smg2000: semi_interp.c,126)
+            0.440000              0.230000  opal_progress (libopen-pal.so.0.0.0)
+            0.400000              0.250000  mca_btl_sm_component_progress (mca_btl_sm.so: btl_sm_frag.c,0)
+            0.330000              0.320000  memcpy (libc-2.11.1.so)
+            0.310000              0.420000  hypre_SemiRestrict (smg2000: semi_restrict.c,125)
+            0.160000              0.240000  hypre_SMGAxpy (smg2000: smg_axpy.c,27)
+
+.fi
+.SH ADVANCED USAGE EXAMPLE
+In this example the two smg2000 MPI application program counter sampling (pcsamp)
+experiments will be compared to each other using the pcsamp metric threadaverage and 
+in the second example, threadmax, to create a side-by-side report will be generated.
+What this means is that the comparison will be made using the metric values across all the
+MPI ranks for average in the first example and max in the second example.  
+.nf
+  osscompare "smg2000-pcsamp-2.openss,smg2000-pcsamp-2.openss" pcsamp::threadaverage rows=5
+  osscompare "smg2000-pcsamp-2.openss,smg2000-pcsamp-2.openss" pcsamp::threadmax rows=5
+.fi
+
+.SH BUGS
+TBD
+
+.SH AUTHOR
+Open|SpeedShop Team <oss-questions@openspeedshop.org>
+.SH "SEE ALSO"
+.BR openss (1),
+.BR ossusertime (1),
+.BR osshwc (1),
+.BR osshwcsamp (1),
+.BR osshwctime (1),
+.BR ossio (1),
+.BR ossiop (1),
+.BR ossiot (1),
+.BR ossmem (1),
+.BR ossmpi (1),
+.BR ossmpip (1),
+.BR ossmpit (1),
+.BR ossmpiotf (1),
+.BR ossomptp (1)
+.BR osspthreads (1)
+.BR osscuda (1)
+.BR OpenSpeedShop (3)
+.BR OpenSpeedShop_offline (3)
+.BR OpenSpeedShop_cbtf (3)
+

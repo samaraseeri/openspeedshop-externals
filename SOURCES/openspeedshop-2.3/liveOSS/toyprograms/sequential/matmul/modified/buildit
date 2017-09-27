@@ -1,0 +1,3 @@
+gfortran -c -g -O2 matmul.f90
+gfortran -o matmul -lblas matmul.o -llapack
+

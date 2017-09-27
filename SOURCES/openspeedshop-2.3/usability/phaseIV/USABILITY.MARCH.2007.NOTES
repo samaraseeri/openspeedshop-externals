@@ -1,0 +1,279 @@
+Candidate #1   (Dave D)
+
+PHASE I.
+  - No problem running sweep3d.mpi outside the tool
+  - Launched openss
+  - Trying to find out how to run sweep3d inside openss
+  - Typing in command window
+  - Looking for/at help menus
+  - Looked at wizard choices
+  - Only one had the work MPI in it so he chose that option
+  - Looking at the MPI_xxxx checkbox choices in the wizard
+  - Said would have thought openss would ask about the application
+    before asking what experiment to run on it.
+  - Got to the load application dialog window
+    - Selected mpirun as the executable, then saw parallel prefix info
+    - Changed the executable to sweep3d.mpi
+    - Read notes in wizard and then clicked ok
+  - Thought the load application parallel prefix dialog was ok, understandable to him
+  - For him, asking him first about the info he knew about (executable) would make
+    more sense.
+  - Comments about the wizard
+    - First screen should have a greyed out Finish button.  The candidate doesn't
+      like it when the buttons move around.  They should be consistent 
+      across the whole of the wizard.
+    - Loading the executable takes a long time.  The candidate would like to know
+      how long or what is going on while waiting.
+
+  - Main Experiment window comes up.  The candidate was able to see that hitting run
+    was the next step.
+  - The candidate was interested in the Manage Process panel and watching the status.
+  - The tooltip in the Manage Process panel says something about focusing on
+    the process using the "Focus on Process" menu item.  The candidate can't find the
+    menu item.
+
+  - Experiment ends and stats panel comes up.   What does the data represent?
+  - The candidate can't figure out what the data represents.  Is it the aggregate?  Which
+    ranks/processes?   No easy way to tell.
+  - The candidate suggests some top level item showing what threads are represented in the
+    stats panel performance information (scope).
+  - The candidate suggests right clicking on item shoudl give local info.
+  - In source not found message, he suggests telling the user about source remapping.
+  - The candidate likes the source remapping feature, says it is less complicated than totalviews.
+
+PHASE II.
+
+  - The candidate sees he needs to open up a saved file.
+  - The candidate goes to the file menu.
+  - After a while he sees the first checkbox in the wizard menu, chooses that.
+  - Martin asks him to find the host and number of processors that were used in creating
+    the file.
+  - The candidate tries to find host, looking in source panel, reads assignment again, right mouse down
+    in Stats Panel, can't find anything that he cano be.
+  - The candidate states that the info should be another line or menu next to the stats panel.
+  - The candidate looks again at the File menu, then the Tools menu.  The candidates looking for the ManageProcesses panel.
+  - We finally show him that it's under the Usertime Tab.  The candidate doesn't think this
+    info should be under a tab.
+  - On Step 3) - show results by statements.
+  - The candidate states that we could have path remapping in the file menu as a convenience.
+  - Step 6: Find out if any of the ranked processes are taking more time than the others.
+  - The candidate goes to the stats panel menu, looking at metrics menu item (not intuiative).
+  - Looks for a long time, does get to "Group Similar Processes".  That wasn't what he was
+    expecting for a name.
+  - Step 7: Show the performance results for the rank 0 process only saving the original StatsPanel results.
+  - The candidate says this function should be in the stats panel menum items or near the stats panel.
+  - Martin comment: Put menu help in yellow color so all help is same color.
+  - The candidate says that the "Hide Chart" could have a X box on the tab line not under tab.
+  - The candidate says the menu item "Group Similar Processes" could be "Group Processes with Similar Performance".
+  - The candidate says results headers for the "Group Similar Processes" are not very useful.
+    "usertime -x 2 -r:0-9"   |  "usertime -x 2 -r:10-255"
+    could be:
+    " Group 1  ( ranks 0-9 )" | " Group 1  ( ranks 10-255 )"
+
+  - The candidate says could have a message somewhere that says: "Found two similar performing groups of processes"
+  - Step 7: Show the performance results for the rank 0 process only saving the original StatsPanel results.
+  - Custom Stats Panel - not what he expected from name 
+  - ran out of time.
+
+
+
+Candidate #2  (Nathan D)
+
+PHASE I.
+
+  - The candidate is immediately confused by the two checkbox and line between them and
+    the radio buttons below.   Looks like you need to check one from each category.
+  - The candidate says on the second wizard page the "<<Intro" should just be "Back" to
+    be consistent.
+  - The candidate puts garbage characters into the sampling rate input box.  No checking is
+    done by openss (BUG).
+  - The candidate says the CLEAR button should be changed to RESET, because that is really
+    what it is doing.
+  - Gets to the load executable dialog box, just selected sweep3d.mpi and didn't see anything
+    about the parallel prefix (mpirun) entry.
+  - Gets "Can't execute sweep3d.mpi under control of OpenSpeedShop" message.  The candidate
+    says this message box needs a scroll bar.
+  - The candidate didn't see parallel prefix box.  Says should be reworded.
+  - Discussion about how this should be done:
+    - Have separate load parallel radio button and separate load scalar radio button.
+    - Prefix terminology not so good.  
+    - Have wizard for launching mpi job.
+      - Ask how many processes
+      - What partition
+      - How many nodes, processors per node
+      - Then build command for user
+  - The candidate notices that canceling in the load executable dialog goes to the next page
+    thus doesn't really cancel.
+  - The candidate noteices that BACK button doesn't clear the load versus attach checkboxes.
+  - The candidate would like to see feedback from openss when openss is loading/attaching to the
+    process.   Maybe telling the user what is being done:  loading executable, processing symbols,
+    fetching mpi job info, attaching to mpi ranked processes, etc...
+  - The candidate hits RUN.
+  - The tooltip in manage process panel keeps popping up.
+  - The word Container in the tooltip is too technical - use panel.
+  - Status dialog is too technical.  "Running expview -x 1 -m usertime::exclusive_time" isn't
+    meaningful to the general user.
+
+PHASE II.
+
+  - Loads the saved file with no problem.
+  - Step 2 - looking for hosts and processes
+  - Looks in stats panel for info, remembers the manage process panel from phase I.
+  - Can't find manage process panel.   Looks everywhere but the usertime tab.
+  - The candidate states that hiding major functionality under a tab is not
+    intuiative.   You might expect to find tab related functions such as, close tab
+    there.
+  - The candidate notices that there is no cancel when deleting the usertime experiment.  
+    Both choices delete to different degrees but you can' opt out.
+  - The candidate suggests reorganizing how to get at saved, existing, etc experiments by
+    having a VIEWS menu next to the FILE menu.
+    FILE       VIEW
+                - Loaded experiments
+                  - 1 Usertime xxx
+                  - 2 pcSamp yyy
+
+  - A description of what is being shown needs to be able to be found in/on/near the StatsPanel.
+  - The candidate didn't know that if he highlighted a function he could see function scope info
+    about that function.   He suggested a menu item that said "Show statements by highlighted function".
+  - The word "Metric" is not user intutiative.
+  - When going to the source by double clicking there should be a better way of denoting what line
+    you focused on in the source panel.  The ">>>" isn't obvious.
+  - Step 6: Find out if any of the ranked processes are taking more time than the others.
+  - The candidate looked for this quite a while.  Nothing around the stats panel seems to look like
+    what he needs.
+  - The candidate finally chose "Group Similar Processes".  Not intuiative.
+  - Didn't understand how to save the existing stats panel via recycle.  Recycle not a good word.
+  - The candidate says openss needs a scope widget on the stats panel
+    - Use this to put show ranks associated with the stats information in the stats panel.
+  - The add/delete/describe dialog box has a cancel button which should be relabled close.
+   
+
+Candidate #3  (Jeff B)
+
+PHASE I.
+
+  - Ran sweep3d.mpi outside of OpenSpeedShop with no problems
+  - Step 2 - Loading executable
+  - Looked at File menu, looking at all the options.  Couldn't find anything relevant
+    Didn't know what existing experiment meant versus saved.  What is existing?
+  - Now confused by the check boxes versus radio buttons.   Do I need to select one check box and
+    then a radio button?
+  - Reading all the wizard options
+  - Picks pcsamp wizard options and gets to the parallel prefix info.  Confused by the parallel prefix wording.
+  - The candidate was asked to find the host name and process info.  He thinks that is done well.
+  - Did the RUN ok.
+  - Would like a filter so he could see only his program/application performance information.
+  - Having trouble with the phrase "existing experiment" in the file menu.  What does existing mean?
+  - Would like feedback on progress when loading/attaching to the executable.  
+
+PHASEII.
+
+  - He is asked to find info about the host and number of processors used.
+    - Looks in the File, the Tools menus.
+    - Says openss needs a scope panel for the stats panel, where this type of info would be available.
+    - Could have an execution environment section to the scope panel.
+    - Dive from functions to statements, follow a hiearchy.
+    - Would like to see a % of the overall in with the exclusive time.
+  - Step 6: Find out if any of the ranked processes are taking more time than the others.
+  - The candidate looked for this quite a while.  Nothing around the stats panel seems to look like
+    what he needs.  Looked at "Show Metrics"  Finally gets to "Group Similar Processes"
+  - The candidate discusses the Hiearchy idea again:
+          Process/Rank
+              |
+             / \
+        Function
+            |
+           / \ 
+        Statement
+
+   - Maybe show a histogram where you click on the histogram to go to the function, then click
+     on the function to go to the statement.
+
+   - The candidate is trying to find the total time taken in the program in the function list view
+     There is no total put out.
+   - Need to be more rank centric.
+   - Calltree comments:
+     - Calltree root should have main at 100% inclusive time.
+     - Have functions indented and be able to close and open the tree
+     - The candidates says that calltrees are inherently inclusive.  Root of tree is main, should be 100% inclusive.
+     - Need to have the calltrees based on inclusive time not exclusive (as is the case now).  
+     - Don't restrict to the top n functions for these views.
+     - Example:
+              The Tree
+
+                 Main
+                 |  \
+                / \  \
+               A   B  C
+              /\ \
+             /  \ \
+            C    D E
+
+           The CallTree View
+
+           Main      1000.0    100 %
+             A        500.0     50 %
+               C      200.0    
+               D      200.0   
+               E      100.0
+                MPI1
+                MPI2
+             B        300.0     30 %
+             C        200.0     20 %
+
+Candidate #4 (Matt)
+
+PHASE I.
+  - Ran step 0 easily.
+  - Started up the openss wizard easily.
+  - Reading wizard info, picked pc sampling.  Wasn't sure what pc stood for.
+  - Trying to load executable and launch mpi job.  Didn't see the parallel prefix
+    info in the load executable dialog box.
+  - Taking a long time to load the executable.  Confused that the application might
+    already be running or have run.
+  - When experiment was run (he had no problem running it after it loaded) the stats panel
+    popped up.
+  - He'd like to see a running total of the total percentage of the routines above the one
+    he is looking at.  That would give him an idea of how important that routine is.
+  - Got a core dump at SS_Cmd_Execution.cxx at 445 when double clicking on rank 0 in the
+    Manage process panel.  There was a delay due to going through the mac laptop and it 
+    might have caught the tool in the middle of some code that wasn't ready for another click.
+    Need to investigate this.
+ 
+PHASE II.
+
+  - Ran step 1 easily.
+  - Step 2 - looking for hosts and processes
+    - Looking at Tools and File menus
+    - Knows there should be another panel that deals with processes, ranks but can't find it
+    - Manage processes panel should be more explicit - easier to find
+  - Step 3 - displaying "by statement"
+    - The candidate thinks we mean go to the source line not to display the results by statement
+    - The candidate looks for how to get to the source.  Gets into "goto function" uses
+      sweep3d_ and openss aborts.
+  - Upon trying to bring the tool up, we run into a consistent abort.  Try several times
+    but can't get around it.   Later we were able to get around the problem by loading the papi
+    module and then unloading it.  Apparently, the LD_LIBRARY_PATH was corrupted.
+  - We had to let the candidate go with time still left because of the above mentioned problem.
+  - The candidate talked about some things that are important to him and his analysis:
+    - Plotting metrics against other metrics, this can show patterns
+    - More HWC metrics measured per execution of the executable
+    - Does a lot of work with physics code which are integer intensive.
+
+Global comments/summary:
+
+   - Make these easy:
+     - Change focus to a rank or set of ranks
+     - Able to see which ranks,processes, or threads the stats panel statistics represent
+     - Do some of custom panel functionality automatically
+     - Save stats panel view while bringing up another (called recycle)
+     - Have a hiearchy, function, statements and make the scoping clear
+       - If by function - list all functions
+   - Parallel job load dialog was not clear enough 
+     - Suggested have separate multiprocess load and scalar load dialogs
+   - Tooltips context boxes are sometimes too big and block the items that are trying to be viewed
+   - Right click on Tab is not recognized.
+     - Critical functionality shouldn't be hidden in the Tab, maybe a drop down menu is alternative
+   - Bring up the process management panel when loading an experiment.
+   - Don't mix checkbox and radio buttons in the IntroWizard
+

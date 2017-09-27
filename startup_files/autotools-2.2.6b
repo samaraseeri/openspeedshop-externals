@@ -1,0 +1,43 @@
+#%Module1.0#####################################################################
+##
+## autotools with libtool-2.2.6b modulefile
+##
+proc ModulesHelp { } {
+        global version openmpi
+
+        puts stderr "\tautotools with libtool-2.2.6b environment.\n"
+}
+
+module-whatis   "Loads the autotools with libtool-2.2.6b runtime environment"
+
+# for Tcl script use only
+set     version         2.2.6b
+set     autotools        /users/jeg/rosa/autotools_root
+
+prepend-path    PATH			$autotools/bin
+prepend-path    MANPATH			$autotools/share/man
+
+eval set  [ array get env HOME ]
+set	ownmoddir	$HOME/privatemodules
+
+set unameexe  "/bin/uname"
+if { [file exists $unameexe] } {
+    set machinetype [ exec /bin/uname -m ]
+    if { $machinetype == "x86"  ||
+         $machinetype == "i386" ||
+         $machinetype == "i486" ||
+         $machinetype == "i586" ||
+	 $machinetype == "i686" } {
+
+	prepend-path LD_LIBRARY_PATH $autotools/lib
+    }
+    if { $machinetype == "x86_64" } {
+	prepend-path LD_LIBRARY_PATH $autotools/lib64
+	prepend-path LD_LIBRARY_PATH $autotools/lib
+    }
+    if { $machinetype == "ia64" } {
+	prepend-path LD_LIBRARY_PATH $autotools/lib
+    }
+}
+
+

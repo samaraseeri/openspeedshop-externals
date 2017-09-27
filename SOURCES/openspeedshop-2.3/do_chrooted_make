@@ -1,0 +1,108 @@
+#!/bin/ksh
+################################################################################
+# Copyright (c) 2005 Silicon Graphics, Inc. All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+# Place, Suite 330, Boston, MA  02111-1307  USA
+################################################################################
+
+
+
+# 07Apr06[sos]: This script (do_chrooted_make) was adapted from the do_build script
+#               for use in building in a Stout5 chrooted build environment.
+
+
+#set -x
+
+if [ "$WORKAREA" = "" ] 
+then echo "WORKAREA not set. exiting..."
+     exit 1
+fi
+
+# get complete path to this script (path include this filename)
+HERE=`which $0`
+
+# now remove everything after and including last / (just the path)
+MYCURRENT=${HERE%/*}
+
+# directory above MYCURRENT
+TOPLEVEL=${MYCURRENT%/*}
+
+# install the build from the workarea here if OPENSS_PREFIX is not set:
+export MYOSSINSTALLDIR=$TOPLEVEL/OpensSpeedShop/usr
+
+if [ "$OPENSS_PREFIX" = "" ] 
+then echo "NOTE: OPENSS_PREFIX not set."
+     echo "NOTE: Defaulting to $MYOSSINSTALLDIR ..."
+     export OPENSS_PREFIX=$MYOSSINSTALLDIR
+else echo "OPENSS_PREFIX is set: $OPENSS_PREFIX"
+fi
+
+echo
+echo "$0: configure workarea build/install using:"
+echo "configure --prefix=$OPENSS_PREFIX"
+
+MYPWD=`pwd`
+echo
+
+if [ ! -f ./.bootstrap_ran ]
+then echo "+ ./bootstrap"
+     if ./bootstrap
+     then echo
+          echo
+          echo 
+          echo "### \"./bootstrap\" ran successfully."
+          touch ./.bootstrap_ran
+     else echo
+          echo
+          echo 
+          echo "### \"./bootstrap\" failed!  Bailing out."
+          exit 1
+     fi
+fi
+
+# configure the workarea build
+if [ ! -f ./.configure_ran ]
+then echo "+ ./configure --prefix=$OPENSS_PREFIX"
+     if ./configure --prefix=$OPENSS_PREFIX
+     then echo
+          echo
+          echo
+          echo "### \"./configure --prefix=$OPENSS_PREFIX\" ran successfully."
+          touch ./.configure_ran
+     else echo
+          echo
+          echo
+          echo "### \"./configure --prefix=$OPENSS_PREFIX\" failed!  Bailing out."
+          exit 1
+     fi 
+fi
+
+# build from the configured workarea source
+echo "+ make"
+if make
+then echo
+     echo
+     echo
+     echo "### \"make\" ran successfully."
+     exit 0
+else echo
+     echo
+     echo
+     echo "### \"make\" failed!  Bailing out."
+     exit 1
+fi
+
+# We shouldn't be able to get here, but if we do, fail.
+exit 1

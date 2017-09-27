@@ -1,0 +1,32 @@
+#%Module1.0#####################################################################
+##
+## openss-build-target modulefile
+##
+proc ModulesHelp { } {
+        global version ossroot
+
+        puts stderr "\topenss - loads the OpenSpeedShop software build environment"
+        puts stderr "\n\tThis adds $oss_prefix/* to several of the"
+        puts stderr "\tbuild environment variables."
+        puts stderr "\n\tVersion $version\n"
+}
+
+module-whatis   "loads the OpenSpeedShop target build environment"
+
+
+# These modules should be loaded for building the target libraries
+#module load rosa
+#module load PrgEnv-gnu
+
+# for Tcl script use only
+set     version         1.9.3.2
+set	oss_prefix /users/jeg/oss
+set     home       /users/jeg
+
+setenv          OPENSS_PREFIX           $oss_prefix
+setenv          OPENSS_TARGET_ARCH      cray-xt5
+setenv          OPENSS_INSTRUMENTOR     offline
+
+setenv OPENSS_TARGET_PAPI /opt/xt-tools/papi/3.6.2/v23/linux
+setenv OPENSS_TARGET_MPI_MPICH2 /opt/cray/mpt/4.0.0/xt/seastar/mpich2-gnu
+

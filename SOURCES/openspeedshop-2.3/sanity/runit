@@ -1,0 +1,87 @@
+echo " "
+echo "                        RUNNING OPENSPEEDSHOP SANITY CHECKER"
+echo " "
+echo " "
+echo "   BEGIN running simple dyninst test"
+echo ""
+cd check_dyninst/create
+./runit
+echo ""
+
+if grep PASSED testresults_* > /dev/null
+then
+    echo "Simple dyninst test PASSED, dyninst is probably setup correctly"
+fi
+
+if grep FAILED testresults_* > /dev/null
+then
+    echo "Simple dyninst test FAILED, examine the dyninst installation for problems"
+fi
+
+echo ""
+echo "   FINISHED running simple dyninst test"
+echo ""
+cd ../../
+
+
+echo ""
+echo "   BEGIN running simple dpcl test"
+cd check_dpcl/one_shot
+./runit
+echo ""
+
+if grep PASSED testresults_* > /dev/null
+then
+    echo "Simple dpcl test PASSED, dpcl is probably setup correctly"
+fi
+
+if grep FAILED testresults_* > /dev/null
+then
+    echo "Simple dpcl test FAILED, examine the dpcl installation for problems"
+fi
+echo ""
+echo "   FINISHED running simple dpcl test"
+echo ""
+cd ../..
+
+
+echo ""
+echo "   BEGIN running simple OpenSpeedShop pcsampling test"
+echo ""
+cd check_openss/simple
+./runit
+cd ../..
+
+if grep PASSED check_openss/simple/testresults_*  > /dev/null
+then
+    echo "Simple OpenSpeedShop pcsampling test PASSED, the minimal OpenSpeedShop environment appears to be setup correctly"
+    echo "SKIP SETUP SCRIPT" > runsetupchecker
+fi
+
+if grep FAILED check_openss/simple/testresults_*  > /dev/null
+then
+    echo "Simple OpenSpeedShop pcsampling test FAILED, examine the OpenSpeedShop installation for problems.  The configuration setup checking script will automatically run now"
+    echo "RUN SETUP SCRIPT" > runsetupchecker
+fi
+echo " "
+echo "   FINISHED running simple OpenSpeedShop pcsampling test"
+echo " "
+echo ""
+
+if grep RUN runsetupchecker > /dev/null
+then
+    echo "Begin running dyninst/dpcl/OpenSpeedShop environment checking script"
+    cd check_setup
+    ./runit
+else
+    echo " "
+    echo " "
+    echo "   *************************************************************************************"
+    echo "   FINISHED running OpenSpeedShop sanity checking tests.  The environment appears VALID."
+    echo "   *************************************************************************************"
+    echo " "
+    echo ""
+fi
+
+
+

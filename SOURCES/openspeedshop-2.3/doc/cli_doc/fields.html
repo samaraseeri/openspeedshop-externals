@@ -1,0 +1,297 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!
+      Copyright (c) 2006-2014 Krell Institute. All Rights Reserved.
+      Permission is granted to copy, distribute and/or modify this document
+      under the terms of the GNU Free Documentation License, Version 1.2
+      or any later version published by the Free Software Foundation;
+      with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+         Texts.  A copy of the license is included in the section entitled "GNU
+      Free Documentation License".
+>
+<html>
+<head>
+  <title>OpenSpeedShop command field definition</title>
+</head>
+<body bgcolor="#ffffff">
+<h1><a name="mozTocId97652" class="mozTocH1"></a><b><font face="Arial"
+ size="4"><a name="Type_and_Status_Defintions"></a><big>Type and Status
+Defintions</big><br>
+</font></b></h1>
+<h2><a name="mozTocId640109" class="mozTocH2"></a><a
+ name="Table_of_Contents"></a>Table of Contents</h2>
+<br>
+<ul id="mozToc">
+<!--mozToc h1 1 h2 2 h3 3 h4 4 h5 5 h6 6--><li><a href="#mozTocId97652">Type
+and Status Defintions</a>
+    <ul>
+      <li><a href="#mozTocId640109">Table of Contents</a>
+        <ul>
+          <li><a href="#mozTocId133354">address_description</a></li>
+          <li><a href="#mozTocId296052">breakId</a></li>
+          <li><a href="#mozTocId968018">cvId</a></li>
+          <li><a href="#mozTocId968019">expId</a></li>
+          <li><a href="#mozTocId784977">expMetric</a></li>
+          <li><a href="#mozTocId932908">expParam</a></li>
+          <li><a href="#mozTocId747157">expType</a></li>
+          <li><a href="#mozTocId464754">target</a></li>
+          <li><a href="#mozTocId769561">linenumber_spec</a></li>
+          <li><a href="#mozTocId359501">ListOf_</a></li>
+          <li><a href="#mozTocId958241">statusType</a></li>
+          <li><a href="#mozTocId958244">Time Interval</a></li>
+          <li><a href="#mozTocId958242">viewType</a></li>
+          <li><a href="#mozTocId958243">verbosity_list_spec</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<br>
+<h3><a name="mozTocId133354" class="mozTocH3"></a><b><font size="3"><li><a
+ name="address_description"></a>address_description</li>
+</font></b></h3>
+<b><font size="3"></font></b><font size="2"> is an absolute or relative
+address.</font>
+<ul>
+  <p><font size="2"> &lt;<b>address_description</b>&gt; ::= &lt;int&gt;
+|| &lt;string&gt;</font></p>
+</ul>
+<h3><a name="mozTocId296052" class="mozTocH3"></a><b><font size="3"><li><a
+ name="breakId"></a>breakId</li>
+</font></b></h3>
+<b><font size="3"></font></b><font size="2"> is a breakpoint identifier.</font>
+<ul>
+  <p><font size="2">&lt;<b>breakId</b>&gt; ::= &lt;int&gt;<b></b></font></p>
+</ul>
+<h3><a name="mozTocId968018" class="mozTocH3"></a><b><b><font size="3"><li><a
+ name="cvId"></a>cvId</li>
+</font></b></b></h3>
+<b><font size="3"></font></b><font size="2"> is a custom view identifier.</font>
+<ul>
+  <p><font size="2">&lt;<b>cvId</b>&gt; ::= &lt;int&gt;</font></p>
+  <p><font size="2">&lt;<b>cvId_list</b>&gt; ::= &lt;cvId&gt [ , &lt;cvId&gt ] +</font></p>
+</ul>
+<h3><a name="mozTocId968019" class="mozTocH3"></a><b><b><font size="3"><li><a
+ name="expId"></a>expId</li>
+</font></b></b></h3>
+<b><font size="3"></font></b><font size="2"> is an experiment
+identifier.</font>
+<ul>
+  <p><font size="2">&lt;<b>expId</b>&gt; ::= &lt;int&gt;</font></p>
+  <p><font size="2">&lt;<b>expId_list</b>&gt; ::= &lt;expId&gt; [ , &lt;expId&gt; ] +</font></p>
+</ul>
+<h3><a name="mozTocId784977" class="mozTocH3"></a><b><font
+ size="3"><li><a name="expMetric"></a>expMetric</li>
+</font></b></h3>
+<font size="3"></font><font size="2"> is a result that an experiment can return.
+It could be a full report, a value or a set of values. </font>
+<ul>
+  <p><font size="2">&lt;<b>metric_name</b>&gt; ::= &lt;string&gt;</font></p>
+  <p><font size="2">&lt;<b>expMetric</b>&gt;
+::= [&lt;expType&gt;<b>::</b>]&lt;metric_name&gt;</font></p>
+  <p><font size="2">&lt;<b>expMetric_list</b>&gt;
+::= &lt;expMetric&gt; [ <b>,</b> &lt;expMetric&gt; ] +</font></p>
+</ul>
+<h3><a name="mozTocId932908" class="mozTocH3"></a><b><font
+ size="3"><li><a name="expParam"></a>expParam</li>
+</font></b></h3>
+<font size="3"></font><font size="2"> is the experiment
+parameters correspond to
+items in the experiment class that can be changed by the user or a tool
+component.</font>
+<ul>
+  <p><font size="2">&lt;<b>param_name</b>&gt; ::=  &lt;string&gt;</font></p>
+  <p><font size="2">&lt;<b>expParam</b>&gt;
+::= [&lt;expType&gt;<b>::</b>]&lt;param_name&gt;</font></p>
+  <p><font size="2">&lt;<b>expParamValue</b>&gt;
+::= [ &lt;int&gt; || &lt;float&gt; || &lt;string&gt; || <b>"</b>&lt;string&gt;<b>"</b>]</font></p>
+  <font size="2">
+- If &lt;expType&gt; is specified, then only that collector's
+parameter is updated.
+  <br>
+- If &lt;expType&gt; is NOT specified, then all
+parameters matching the parameter name are updated, regardless of the
+collector name, for that experiment .
+  </font>
+</ul>
+<h3><a name="mozTocId747157" class="mozTocH3"></a><b><b><b><font
+ size="3"><li><a name="expType"></a>expType</li>
+</font></b></b></b></h3>
+<font size="2"> is the experiment type designator. Using this in
+the expCreate
+or expAttach command fills in the default values for the experiment.</font>
+<ul>
+  <font size="2">&lt;<b>predefined_exp</b>&gt; ::= {
+  <b>pcsamp</b> || <b>usertime</b> || <b>mpi</b> || <b>fpe</b> || <b>hwc</b>
+|| <b>io</b> || ? }</font></b></font>
+  <p></p>
+  <font size="2">&lt;<b>user_defined_exp</b>&gt;
+::= &lt;filename&gt;</font>
+  <p></p>
+  <font size="2">&lt;<b>expType&gt;</b>&gt;
+::= [ &lt;predefined_exp&gt; || &lt;user_defined_exp&gt; ]</font>
+  <p></p>
+  <font size="2">&lt;<b>expType_list</b>&gt;
+::= &lt;expType&gt; [ <b>,</b> &lt;expType&gt; ] +</font>
+  <p></p>
+</ul>
+<h3><a name="mozTocId464754" class="mozTocH3"></a><font
+ size="3"><b><li><a name="target"></a>target</b></li>
+</font></h3>
+<font size="2"> represents the host file and machine
+along with a specific process, thread, or rank identifier.</font>
+<ul>
+  <font size="2">&lt;<b>rankname</b>&gt;
+::= &lt;int&gt;</font>
+  <br>
+  <font size="2">&lt;<b>rank_range</b>&gt;
+::= &lt;rankname&gt; [ <b>:</b> &lt;rankname&gt; ]</font>
+  <br>
+  <font size="2">&lt;<b>rank_list</b>&gt;
+::= &lt;rank_range&gt; [ <b>,</b> &lt;rank_range&gt; ] +</font>
+  <br>
+  <font size="2">&lt;<b>rank_list_spec</b>&gt;
+::= <b>-r</b> &lt;rank_list&gt;</font>
+  <p></p>
+  <font size="2">&lt;<b>threadname</b>&gt;
+::= &lt;int&gt;</font>
+  <br>
+  <font size="2">&lt;<b>thread_range</b>&gt;
+::= &lt;threadname&gt; [ <b>:</b> &lt;threadname&gt; ]</font>
+  <br>
+  <font size="2">&lt;<b>thread_list</b>&gt;
+::= &lt;thread_range&gt; [ <b>,</b> &lt;thread_range&gt; ] +</font>
+  <br>
+  <font size="2">&lt;<b>thread_list_spec</b>&gt;
+::= <b>-t</b> &lt;thread_list&gt;</font>
+  <p></p>
+  <font size="2">&lt;<b>pidname</b>&gt;
+::= &lt;int&gt;</font>
+  <br>
+  <font size="2">&lt;<b>pid_range</b>&gt;
+::= &lt;pidname&gt; [ <b>:</b> &lt;pidname&gt; ]</font>
+  <br>
+  <font size="2">&lt;<b>pid_list</b>&gt;
+::= &lt;pid_range&gt; [ <b>,</b> &lt;pid_range&gt; ] +</font>
+  <br>
+  <font size="2">&lt;<b>pid_list_spec</b>&gt;
+::= <b>-p</b> &lt;pid_list&gt;</font>
+  <p></p>
+  <font size="2">&lt;<b>filename</b>&gt;
+::= &lt;string&gt; || <b>"</b>&lt;string&gt;<b>"</b></font>
+  <br>
+  <font size="2">&lt;<b>file_list</b>&gt;
+::= &lt;filename&gt; [ <b>,</b> &lt;filename&gt; ] +</font>
+  <br>
+  <font size="2">&lt;<b>file_list_spec</b>&gt;
+::= <b>-f</b> &lt;file_list&gt;</font>
+  <p></p>
+  <font size="2">&lt;<b>IP_Address</b>&gt;
+::= &lt;int&gt;<b>.</b>&lt;int&gt;<b>.</b>&lt;int&gt;<b>.</b>&lt;int&gt;</font>
+  <br>
+  <font size="2">&lt;<b>hostname</b>&gt;
+::= &lt;string&gt; || &lt;IP_Address&gt;</font>
+  <br>
+  <font size="2">&lt;<b>host_list</b>&gt;
+::= <b>-h</b> &lt;host_name&gt; [ <b>,</b> &lt;host_name&gt; ] +</font>
+  <br>
+  <font size="2">&lt;<b>host_list_spec</b>&gt;
+::= <b>-h</b> &lt;host_list&gt;</font>
+  <p></p>
+  <font size="2">&lt;<b>target</b>&gt;
+::=
+[ &lt;host_list_spec&gt; ]
+[ &lt;file_list_spec&gt; ]
+[ &lt;pid_list_spec&gt; ]
+[ &lt;thread_list_spec ]
+[ &lt;rank_list_spec ]</font>
+  <br>
+  <font size="2">&lt;<b>target_list</b>&gt;
+::= &lt;target&gt; [ <b>;</b> &lt;target&gt; ] +</font>
+  <p></p>
+  <font size="2">&lt;<b>file_spec</b>&gt;
+::= <b>-f</b> &lt;file_name&gt;</font>
+  <br>
+  <font size="2">&lt;<b>host_spec</b>&gt;
+::= <b>-h</b> &lt;host_name&gt;</font>
+  <br>
+  <font size="2">&lt;<b>host_file</b>&gt;
+::= [ &lt;host_spec&gt; ] &lt;file_spec&gt;</font>
+</ul>
+<h3><a name="mozTocId769561" class="mozTocH3"></a><b><font
+ size="3"><li><a name="linenumber_range_spec"></a>linenumber_range_spec</li>
+</font></b></h3>
+<font size="2"> is a source line number</font>
+<ul>
+  <p><font size="2">&lt;<b>lineno_range</b>&gt; ::= &lt;lineno&gt;
+[ <b>:</b> &lt;lineno&gt; ] </font></p>
+  <p><font size="2">&lt;<b>linenumber_range_spec</b>&gt; ::= <b>-l</b>
+&lt;lineno_range&gt; </font></p>
+  <p><font size="2">&lt;<b>linenumber_list_spec</b>&gt; ::= <b>-l</b>
+&lt;lineno_range&gt; [ <b> ,</b> &lt;lineno_range&gt; ] +</font></p>
+</ul>
+<h3><a name="mozTocId359501" class="mozTocH3"></a><b><font
+ size="3"><li><a name="ListOf_"></a>ListOf_</li>
+</font></b></h3>
+<font sixe="2">xxx</font>
+<font size="2">indicates a list of type xxx items.</font>
+<h3><a name="mozTocId958241" class="mozTocH3"></a><b><font
+ size="3"><li><a name="viewType"></a>statusType</li>
+</font></b></h3>
+<p><font size="2">is the current state of the experiment.
+</font>
+</p>
+<ul>
+  <p><font size="2">&lt;<b>statusType</b>&gt;
+::= { <b>NonExistent</b> || <b>Paused</b> || <b>Disabled</b> || <b>Running</b> || <b>Terminated</b>
+|| <b>Error</b> }</font></p>
+</ul>
+<h3><a name="mozTocId958244" class="mozTocH3"></a><b><font
+ size="3"><li><a name="time_interval"></a>Time Interval</li>
+</font></b></h3>
+<p><font size="2">provide a way to restrict the data samples used to generate a
+report to a particular time segment.  The restriction specifies a portion of the
+wall clock time between the first and last data sample taken for the experiment.
+With the appropriate indicator, the interval may be expressed as a percent of the
+entire, available range or as an offset in seconds, milleseconds, microseconds
+or nanoseconds, from the start of the available range. If no indicator is provided,
+milliseconds is assumed.
+</font>
+</p>
+<ul>
+  <p><font size="2">&lt;<b>interval_value</b>&gt; ::= &lt;int&gt; || &lt;float&gt;</font></p>
+  <p><font size="2">&lt;<b>interval_range</b>&gt; ::= &lt;interval_value&gt;
+     <b>:</b> &lt;interval_value&gt;</font></p>
+  <p><font size="2">&lt;<b>interval_specification</b>&gt;
+     ::= [ <b>%</b> || <b>s</b> || <b>ms</b> || <b>us</b> || <b>ns</b> ]</font></p>
+  <p><font size="2">&lt;<b>time_interval_list</b>&gt; ::= &lt;interval_specification&gt;
+     &lt;interval_range&gt; [ <b>,</b> &lt;interval_range&gt; ] +</font></p>
+  <p><font size="2">&lt;<b>time_interval_spec</b>&gt; ::= <b>-I</b> &lt;time_interval_list&gt;</font></p>
+</ul>
+<h3><a name="mozTocId958242" class="mozTocH3"></a><b><font
+ size="3"><li><a name="viewType"></a>viewType</li>
+</font></b></h3>
+<p><font size="2">is the output view display/report type
+designator. This
+indicates the format of the output display that the performance data is
+needed for.</font>
+</p>
+<ul>
+  <p><font size="2">&lt;<b>viewType</b>&gt; ::= &lt;string&gt;</font></p>
+  <p><font size="2">&lt;<b>viewType_list</b>&gt; ::= &lt;viewType&gt;
+     [ <b>,</b> &lt;viewType&gt; ] +</font></p>
+</ul>
+<h3><a name="mozTocId958243" class="mozTocH3"></a><b><font
+ size="3"><li><a name="verbosity_list_spec"></a>verbosity_list_spec</li>
+</font></b></h3>
+<p><font size="2">is used to control the amount and detail of information
+provided by the <b>help</b> command.  The currently supported values are
+<b>brief</b>, <b>normal</b> and <b>detailed</b>, which can be abreviated
+<b>b</b>, <b>n</b> or <b>d</b>.</font>
+</p>
+<ul>
+  <p><font size="2">&lt;<b>verbosityType</b>&gt; ::= &lt;string&gt;</font></p>
+  <p><font size="2">&lt;<b>verbosity_list_spec</b>&gt; ::= <b>-v</b>
+     &lt;verbosityType&gt; [ <b>,</b> &lt;verbosityType&gt; ] +</font></p>
+</ul>
+</body>
+</html>

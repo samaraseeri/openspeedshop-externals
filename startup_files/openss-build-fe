@@ -1,0 +1,24 @@
+#%Module1.0#####################################################################
+##
+## openss-build-fe modulefile
+##
+proc ModulesHelp { } {
+        global version ossroot
+
+        puts stderr "\topenss - loads the OpenSpeedShop software build environment"
+        puts stderr "\n\tThis adds $oss-prefix/* to several of the"
+        puts stderr "\tbuild environment variables."
+        puts stderr "\n\tVersion $version\n"
+}
+
+module-whatis   "loads the OpenSpeedShop target build environment"
+
+# for Tcl script use only
+set     version         1.9.3.2
+set     oss        /users/jeg/current
+set	oss_prefix /users/jeg/oss
+set     home       /users/jeg
+
+setenv          OPENSS_PREFIX           $oss_prefix
+setenv          OPENSS_INSTRUMENTOR     offline
+

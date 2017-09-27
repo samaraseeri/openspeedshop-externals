@@ -1,0 +1,81 @@
+#%Module1.0#####################################################################
+##
+## openss-oss-target modulefile
+##
+proc ModulesHelp { } {
+        global version ossroot
+
+        puts stderr "\topenss - loads the OpenSpeedShop software target execution environment"
+        puts stderr "\n\tThis adds $oss_prefix/* to several of the"
+        puts stderr "\ttarget execution environment variables."
+        puts stderr "\n\tVersion $version\n"
+}
+
+module-whatis   "loads the OpenSpeedShop target execution environment"
+
+
+# Please load these module if they are not loaded
+#module load rosa
+#module load PrgEnv-gnu
+#echo "Please load these module if they are not loaded: rosa PrgEnv-gnu"
+
+# for Tcl script use only
+set     version         1.9.3.2
+set     oss        /users/jeg/current/OpenSpeedShop
+set	oss_prefix /users/jeg/oss
+set	oss_prefix_target /users/jeg/oss/cray-xt5
+set     home       /users/jeg
+
+#setenv          OPENSS_HOME             $oss
+#setenv          OPENSS_INSTALL_DIR      $oss_prefix
+setenv          OPENSS_PREFIX           $oss_prefix
+setenv          OPENSS_DOC_DIR          $oss_prefix/share/doc/packages/OpenSpeedShop
+setenv          OPENSS_TARGET_ARCH      cray-xt5
+setenv          OPENSS_INSTRUMENTOR     offline
+setenv          XPLAT_RSH       ssh
+
+setenv OPENSS_TARGET_PAPI_PATH /opt/xt-tools/papi/3.6.2/v23/linux
+#setenv OPENSS_TARGET_MPI_MPICH2 /opt/mpt/3.4.1/xt/mpich2-cray
+
+
+# oss_prefix_target/bin must come first to 
+# find the osslink in the target directory
+
+prepend-path    PATH                    $oss_prefix/bin
+prepend-path    PATH                    $oss_prefix_target/bin
+prepend-path    MANPATH                 $oss_prefix/share/man
+
+eval set  [ array get env HOME ]
+set     ownmoddir       $HOME/privatemodules
+
+set unameexe  "/bin/uname"
+if { [file exists $unameexe] } {
+    set machinetype [ exec /bin/uname -m ]
+    if { $machinetype == "x86" ||
+         $machinetype == "i386" ||
+         $machinetype == "i486" ||
+         $machinetype == "i586" ||
+         $machinetype == "i686" } {
+        setenv  OPENSS_PLUGIN_PATH   $oss_prefix/lib/openspeedshop
+        setenv  OPENSS_PLUGIN_PATH   $oss_prefix_target/lib/openspeedshop
+        setenv DYNINSTAPI_RT_LIB $oss_prefix/lib/libdyninstAPI_RT.so.1
+
+        prepend-path LD_LIBRARY_PATH $oss_prefix/lib
+        prepend-path LD_LIBRARY_PATH $oss_prefix_target/lib
+    }
+    if { $machinetype == "x86_64" } {
+        setenv  OPENSS_PLUGIN_PATH   $oss_prefix/lib64/openspeedshop
+        setenv  OPENSS_PLUGIN_PATH   $oss_prefix_target/lib64/openspeedshop
+        setenv DYNINSTAPI_RT_LIB $oss_prefix/lib64/libdyninstAPI_RT.so.1
+        prepend-path LD_LIBRARY_PATH $oss_prefix/lib64
+        prepend-path LD_LIBRARY_PATH $oss_prefix_target/lib64
+    }
+    if { $machinetype == "ia64" } {
+        setenv  OPENSS_PLUGIN_PATH   $oss_prefix/lib/openspeedshop
+        setenv  OPENSS_PLUGIN_PATH   $oss_prefix_target/lib/openspeedshop
+        setenv DYNINSTAPI_RT_LIB $oss_prefix/lib/libdyninstAPI_RT.so.1
+        prepend-path LD_LIBRARY_PATH $oss_prefix/lib
+        prepend-path LD_LIBRARY_PATH $oss_prefix_target/lib
+    }
+}
+

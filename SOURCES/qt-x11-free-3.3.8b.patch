@@ -1,0 +1,43 @@
+--- qt-x11-free-3.3.8b/src/tools/qmap.h	2008-01-15 13:09:13.000000000 -0600
++++ qt-x11-free-3.3.8b-fixes/src/tools/qmap.h	2011-11-12 03:53:32.067483007 -0600
+@@ -52,6 +52,7 @@
+ #ifndef QT_NO_STL
+ #include <iterator>
+ #include <map>
++#include <cstddef>
+ #endif
+ 
+ //#define QT_CHECK_MAP_RANGE
+--- qt-x11-free-3.3.8b/src/tools/qvaluelist.h	2008-01-15 13:09:13.000000000 -0600
++++ qt-x11-free-3.3.8b-fixes/src/tools/qvaluelist.h	2011-11-12 03:53:39.791385904 -0600
+@@ -50,6 +50,7 @@
+ #ifndef QT_NO_STL
+ #include <iterator>
+ #include <list>
++#include <cstddef>
+ #endif
+ 
+ //#define QT_CHECK_VALUELIST_RANGE
+--- qt-x11-free-3.3.8b/src/tools/qvaluevector.h	2008-01-15 13:09:13.000000000 -0600
++++ qt-x11-free-3.3.8b-fixes/src/tools/qvaluevector.h	2011-11-12 03:53:01.299869809 -0600
+@@ -47,6 +47,7 @@
+ 
+ #ifndef QT_NO_STL
+ #include <vector>
++#include <cstddef>
+ #endif
+ 
+ template <class T>
+
+diff -ur qt-x11-free-3.3.8b/mkspecs/linux-icc/qmake.conf qt-x11-free-3.3.8b-fixed/mkspecs/linux-icc/qmake.conf
+--- qt-x11-free-3.3.8b/mkspecs/linux-icc/qmake.conf	2008-01-15 22:09:16.000000000 +0300
++++ qt-x11-free-3.3.8b-fixed/mkspecs/linux-icc/qmake.conf	2016-02-20 14:51:32.350999830 +0300
+@@ -20,7 +20,7 @@
+ QMAKE_CFLAGS_WARN_OFF	= -w
+ QMAKE_CFLAGS_RELEASE	= -O2
+ QMAKE_CFLAGS_DEBUG	= -g
+-QMAKE_CFLAGS_SHLIB	= -KPIC
++QMAKE_CFLAGS_SHLIB	= -fPIC
+ QMAKE_CFLAGS_YACC	=
+ QMAKE_CFLAGS_THREAD	= -D_REENTRANT
+

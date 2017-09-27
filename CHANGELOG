@@ -1,0 +1,5 @@
+
+This represents a new OpenSpeedShop-2.3 release.
+
+
+We have moved from using GNU autotools to build OpenSpeedShop to the cmake build tool.

@@ -1,0 +1,711 @@
+
+FROM: generic laptop/desktop
+
+# Build krellroot (external packages needed by OpenSpeedShop and/or CBTF)
+./install-tool --build-krell-root --krell-root-prefix /opt/krellroot_v2.2.beta1 --with-openmpi /opt/openmpi-1.8.2
+
+# Build OSS using offline instrumentor with krell-root
+./install-tool --build-offline --openss-prefix /opt/oss_offline_v2.2.beta1 --krell-root-prefix /opt/krellroot_v2.2.beta1 --with-openmpi /opt/openmpi-1.8.2
+
+# Build cbtf components using the krell-root (NOTE - need --build-cbtf-all for version 2.2)
+./install-tool --build-cbtf-all --cbtf-prefix /opt/cbtf_only_v2.2.beta1 --krell-root-prefix /opt/krellroot_v2.2.beta1 --with-openmpi /opt/openmpi-1.8.2 
+
+# Build only OSS using the cbtf components and the krell-root
+./install-tool --build-onlyosscbtf --openss-prefix /opt/osscbtf_v2.2.beta1 --cbtf-prefix /opt/cbtf_only_v2.2.beta1 --krell-root-prefix /opt/krellroot_v2.2.beta1 --with-openmpi /opt/openmpi-1.8.2
+
+# If you need to build Dyninst by itself - this is one way to do it
+./install-tool --build-dyninst --krell-root-prefix /opt/dyninst-8.2.1 --with-openmpi /opt/openmpi-1.8.2 --with-libelf /opt/krellroot_v2.2.beta2 --with-libdwarf /opt/krellroot_v2.2.beta2 --with-binutils /opt/krellroot_v2.2.beta2 --with-boost /opt/krellroot_v2.2.beta2
+
+---------- Specialized large scale system Build examples ----------------
+
+FROM: hdn at creativeC
+
+module load cmake-3.2.2
+
+# Build krellroot (external packages needed by OpenSpeedShop and/or CBTF)
+./install-tool --build-krell-root --krell-root-prefix /home/jeg/krellroot_v2.2_latest --with-openmpi /home/jeg/installs/openmpi-1.8.8 --with-mpich2 /opt/intel/impi/5.0.1.035/intel64 --with-mvapich2 /home/jeg/installs/mvapich2-2.1 
+
+# Build OSS using offline instrumentor with krell-root
+./install-tool --build-offline --openss-prefix /home/jeg/ossoff_v2.2_latest --krell-root-prefix /home/jeg/krellroot_v2.2_latest --with-openmpi /home/jeg/installs/openmpi-1.8.8 --with-mpich2 /opt/intel/impi/5.0.1.035/intel64 --with-mvapich2 /home/jeg/installs/mvapich2-2.1
+
+# Build cbtf components using the krell-root (NOTE - need --build-cbtf-all for version 2.2)
+./install-tool --build-cbtf-all --cbtf-prefix /home/jeg/cbtf_all_v1.6_latest --krell-root-prefix /home/jeg/krellroot_v2.2_latest --with-openmpi /home/jeg/installs/openmpi-1.8.8 --with-mpich2 /opt/intel/impi/5.0.1.035/intel64 --with-boost /home/jeg/krellroot_v2.2_latest --with-mvapich2 /home/jeg/installs/mvapich2-2.1
+
+# Build only OSS using the cbtf components and the krell-root
+./install-tool --build-onlyosscbtf --openss-prefix  /home/jeg/osscbtf_v2.2_latest --cbtf-prefix /home/jeg/cbtf_all_v1.6_latest --krell-root-prefix /home/jeg/krellroot_v2.2_latest --with-openmpi /home/jeg/installs/openmpi-1.8.8 --with-mpich2 /opt/intel/impi/5.0.1.035/intel64 --with-mvapich2 /home/jeg/installs/mvapich2-2.1
+
+---------------------------
+FROM: rzuseq at LLNL (bgq system)
+
+# First Build the compute node version (versions if you use the recommended krell externals root build first):
+# rzuseq compute node:
+
+# Build the krellroot external packages
+./install-tool --build-krell-root --runtime-only --target-shared --target-arch bgq --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/bgq/krellroot_stable/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm --with-papi /collab/usr/global/tools//papi/bgqos_0/papi-5.1.1-gcc47
+
+# Build OSS offline version using the krellroot external packages
+./install-tool --build-offline --runtime-only --target-shared --target-arch bgq --openss-prefix /collab/usr/global/tools/openspeedshop/oss-dev/bgq/oss_offline_stable/bgq --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/bgq/krellroot_stable/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm --with-binutils /bgsys/drivers/ppcfloor/gnu-linux/powerpc64-unknown-linux-gnu/powerpc64-bgq-linux --with-papi /collab/usr/global/tools//papi/bgqos_0/papi-5.1.1-gcc47
+
+# Next build the login node version and reference the compute node version using --runtime-dir
+# rzuseq login node:
+
+# Build the krellroot external packages
+./install-tool --build-krell-root --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/bgq/krellroot_stable --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc
+
+# Build OSS offline version using the krellroot external packages
+# Use runtime-dir approach pointing to openss compute node install
+./install-tool --build-offline --openss-prefix /collab/usr/global/tools/openspeedshop/oss-dev/bgq/oss_offline_stable --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/bgq/krellroot_stable --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --with-runtime-dir /collab/usr/global/tools/openspeedshop/oss-dev/bgq/oss_offline_stable/bgq --with-ltdl /collab/usr/global/tools/openspeedshop/oss-dev/bgq/autotools_stable/autotools_root --with-papi /collab/usr/global/tools//papi/bgqos_0/papi-5.1.1-gcc47 
+
+---------------------------
+FROM: Titan at ORNL (cray-xk system)
+
+# Build the target/compute node versions of the software first.
+# Load the correct modules for generating compute node instructions/code
+
+module swap PrgEnv-pgi PrgEnv-gnu
+module load cmake3/3.2.3
+module load cudatoolkit
+module load gcc
+
+# Build the krellroot compute node version of external packages
+./install-tool --build-krell-root --target-shared --target-arch cray --runtime-only --krell-root-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-alps /opt/cray/alps/5.2.1-2.0502.9072.13.1.gem --with-cuda /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1 --with-cupti /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1/extras/CUPTI
+
+# Build OSS offline compute node version using the krellroot external packages
+./install-tool --build-offline --target-shared --target-arch cray --runtime-only --openss-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/oss_offline_stable/compute --krell-root-install-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-boost /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49  --with-cuda /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1 --with-cupti /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1/extras/CUPTI
+
+# Build CBTF compute node version using the krellroot external packages
+./install-tool --build-cbtf-all --runtime-only --target-arch cray --target-shared --cbtf-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/cbtf_only_stable/compute --krell-root-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49  --with-cuda /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1 --with-cupti /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1/extras/CUPTI
+
+# If you need to build these package separately, this is one way to do it
+#./install-tool --build-boost --target-shared --target-arch cray --runtime-only --krell-root-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49
+
+#./install-tool --build-dyninst --target-shared --target-arch cray --runtime-only --krell-root-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-boost /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-libdwarf /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-libelf /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-binutils /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute
+
+#./install-tool --build-mrnet --target-shared --target-arch cray --runtime-only --krell-root-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-alps /opt/cray/alps/5.2.1-2.0502.9072.13.1.gem --with-boost /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute
+
+
+# Build the front-end/login node versions of the software first.
+# Load the correct modules for generating FE node instructions/code
+FE NODE:
+module unload PrgEnv-pgi/5.2.40 PrgEnv-gnu PrgEnv-cray PrgEnv-intel
+module unload craype-interlagos
+module load cmake3/3.2.3
+module load cudatoolkit
+module unload cray-mpich/7.2.5
+module unload craype-network-gemini
+module load craype-network-none
+module load alps/5.2.1-2.0502.9479.20.1.gem
+module load gcc
+
+# Build the krellroot front-end node version of external packages
+./install-tool --build-krell-root --krell-root-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49  --with-alps /opt/cray/alps/5.2.1-2.0502.9072.13.1.gem --with-cuda /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1 --with-cupti /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1/extras/CUPTI
+
+# If you need a separate compute node version of MRNet then you can use this, otherwise it should be built into krellroot above.
+./install-tool --build-mrnet --krell-root-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-alps /opt/cray/alps/5.2.1-2.0502.9072.13.1.gem --with-boost /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable
+
+# Build the OSS offline front-end version using the krellroot front-end node version of external packages
+./install-tool --build-offline --target-shared --target-arch cray --openss-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/oss_offline_stable --krell-root-install-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-boost /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-runtime-dir /lustre/atlas1/csc103/proj-shared/jgalaro/oss_offline_stable/compute --with-cuda /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1 --with-cupti /opt/nvidia/cudatoolkit7.0/7.0.28-1.0502.10280.4.1/extras/CUPTI
+
+# Build the CBTF front-end version using the krellroot front-end node version of external packages
+./install-tool --runtime-target-arch cray --build-cbtf-all --cbtf-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/cbtf_only_stable --krell-root-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-cn-boost /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-cn-mrnet /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-cn-xercesc /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-cn-libmonitor /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-cn-libunwind /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-cn-dyninst /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-cn-papi /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable/compute --with-cn-cbtf-krell /lustre/atlas1/csc103/proj-shared/jgalaro/cbtf_only_stable/compute --with-cn-cbtf /lustre/atlas1/csc103/proj-shared/jgalaro/cbtf_only_stable/compute --with-binutils /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-boost /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-mrnet /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-xercesc /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-libmonitor /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-libunwind /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-dyninst /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-papi /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-alps /opt/cray/alps/5.2.1-2.0502.9072.13.1.gem
+
+
+# Build the OSS/CBTF front-end version using the krellroot front-end node version of external packages
+./install-tool --target-arch cray --build-onlyosscbtf --openss-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/osscbtf_stable --with-cn-cbtf-krell /lustre/atlas1/csc103/proj-shared/jgalaro/cbtf_only_stable/compute --krell-root-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-papi /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-boost /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-mrnet /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-xercesc /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-libmonitor /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-libunwind /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-dyninst /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-libelf /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-libdwarf /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --with-binutils /lustre/atlas1/csc103/proj-shared/jgalaro/krellroot_stable --cbtf-prefix /lustre/atlas1/csc103/proj-shared/jgalaro/cbtf_only_stable
+
+---------------------------
+FROM: rzmerl at LLNL: (x86_64 cluster)
+
+Build on: rzmerl at LLNL:
+
+use .adept
+
+# Build krellroot: (note rzmerl has several versions of python and boost installed in different /usr directories, 
+# and cmake can't determine which one to use so we build our own)
+
+# Build boost:
+./install-tool --build-boost --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/boost_153 
+
+# Build python:
+./install-tool --build-python --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/python-2.7.3
+ 
+# Build krellroot: 
+./install-tool --build-krell-root --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/krellroot_stable --force-papi-build --force-libunwind-build --with-mvapich2 /usr/local/tools/mvapich2-gnu-1.9 --with-mvapich /usr/local/tools/mvapich-gnu --with-python /collab/usr/global/tools/openspeedshop/oss-dev/x8664/python-2.7.3 --with-python-vers 2.7 --with-openmpi /opt/openmpi-1.8-gnu --with-boost /collab/usr/global/tools/openspeedshop/oss-dev/x8664/boost_153
+
+# Build offline with krellroot
+./install-tool --build-offline --openss-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/oss_offline_stable --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/krellroot_stable --with-mvapich2 /usr/local/tools/mvapich2-gnu-1.9 --with-mvapich /usr/local/tools/mvapich-gnu --with-python /collab/usr/global/tools/openspeedshop/oss-dev/x8664/python-2.7.3 --with-boost /collab/usr/global/tools/openspeedshop/oss-dev/x8664/boost_153 --with-python-vers 2.7
+
+# Build cbtf using the krellroot:
+./install-tool --build-cbtf-all --cbtf-install-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/cbtf_only_stable --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/krellroot_stable --with-mvapich2 /usr/local/tools/mvapich2-gnu-1.9 --with-mvapich /usr/local/tools/mvapich-gnu --with-python /collab/usr/global/tools/openspeedshop/oss-dev/x8664/python-2.7.3 --with-python-vers 2.7 --with-boost /collab/usr/global/tools/openspeedshop/oss-dev/x8664/boost_153
+
+# Build the cbtf instrumentor version of OpenSpeedShop using cbtf and the krellroot:
+./install-tool --build-onlyosscbtf --openss-install-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/osscbtf_only_stable --cbtf-install-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/cbtf_stable --krell-root-prefix /collab/usr/global/tools/openspeedshop/oss-dev/x8664/krellroot_stable --with-mvapich2 /usr/local/tools/mvapich2-gnu-1.9 --with-mvapich /usr/local/tools/mvapich-gnu --with-python /collab/usr/global/tools/openspeedshop/oss-dev/x8664/python-2.7.3 --with-python-vers 2.7 --with-boost /collab/usr/global/tools/openspeedshop/oss-dev/x8664/boost_153
+
+---------------------------
+FROM: yellowstone: (IBM cluster, not verified with 2.2)
+
+module purge
+module load gnu
+module load cmake
+
+Offline instrumentor (supported version)
+
+#  Build OSS using offline instrumentor without krell-root
+./install-tool --build-offline --openss-prefix /glade/u/home/galaro/oss_offline_v2.1 --with-python /glade/apps/opt/python/2.7.3/gnu/4.7.2 --with-mpich2 /opt/ibmhpc/pe1209/mpich2/gnu --with-boost /glade/apps/opt/boost/1.52.0/intel/12.1.5
+
+#  Build the krell-root only
+./install-tool --build-krell-root --krell-root-prefix /glade/u/home/galaro/krellroot_v2.1 --with-python /glade/apps/opt/python/2.7.3/gnu/4.7.2 --with-mpich2 /opt/ibmhpc/pe1209/mpich2/gnu --with-boost /glade/apps/opt/boost/1.52.0/intel/12.1.5 --force-binutils-build
+
+#  Build OSS using offline instrumentor with krell-root
+./install-tool --build-offline --krell-root-prefix /glade/u/home/galaro/krellroot_v2.1 --openss-prefix /glade/u/home/galaro/oss_offline_v2.1 --with-python /glade/apps/opt/python/2.7.3/gnu/4.7.2 --with-mpich2 /opt/ibmhpc/pe1209/mpich2/gnu --with-boost /glade/apps/opt/boost/1.52.0/intel/12.1.5
+
+
+CBTF instrumentor (experimental version)
+#  Build the krell-root only
+./install-tool --build-krell-root --krell-root-prefix /glade/u/home/galaro/krellroot_v2.1 --with-python /glade/apps/opt/python/2.7.3/gnu/4.7.2 --with-mpich2 /opt/ibmhpc/pe1209/mpich2/gnu --with-boost /glade/apps/opt/boost/1.52.0/intel/12.1.5 --force-binutils-build
+
+# Build cbtf components using the krell-root
+./install-tool --build-cbtf-all --krell-root-prefix /glade/u/home/galaro/krellroot_v2.1--cbtf-prefix /glade/u/home/galaro/cbtf_only_v1.1 --with-python /glade/apps/opt/python/2.7.3/gnu/4.7.2 --with-mpich2 /opt/ibmhpc/pe1209/mpich2/gnu --with-boost /glade/apps/opt/boost/1.52.0/intel/12.1.5
+
+# Build only OSS using the cbtf components and the krell-root
+./install-tool --build-onlyosscbtf --krell-root-prefix /glade/u/home/galaro/krellroot_v2.1--cbtf-prefix /glade/u/home/galaro/cbtf_only_v1.1--openss-prefix /glade/u/home/galaro/osscbtf_v2.1 --with-python /glade/apps/opt/python/2.7.3/gnu/4.7.2 --with-mpich2 /opt/ibmhpc/pe1209/mpich2/gnu --with-boost /glade/apps/opt/boost/1.52.0/intel/12.1.5
+
+
+----------------
+FROM: todi at CSCS: (cray system, not verified with 2.2)
+
+module swap PrgEnv-cray PrgEnv-gnu
+module load cmake
+module load cudatoolkit
+
+Offline instrumentor (supported version)
+
+#  Build OSS using offline instrumentor without krell-root
+./install-tool --build-offline --target-arch cray-xk --openss-prefix /users/jeg/todi/oss_offline_v2.1 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-boost /apps/todi/boost/1.50sn/gnu_434 
+
+#  Build the krellroot only
+./install-tool --build-krell-root --krell-root-prefix /users/jeg/todi/new_krellroot_v2.1 --force-binutils-build --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --target-shared --with-boost /apps/todi/boost/1.50sn/gnu_434
+
+#  Build OSS using offline instrumentor with krell-root
+./install-tool --build-offline --target-arch cray-xk --openss-prefix /users/jeg/todi/oss_offline_v2.1 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-boost /apps/todi/boost/1.50sn/gnu_434 --krell-root-prefix /users/jeg/todi/new_krellroot_v2.1 
+
+
+CBTF instrumentor (experimental version)
+
+#  Build the krellroot only
+./install-tool --build-krell-root --krell-root-prefix /users/jeg/todi/new_krellroot_v2.1 --force-binutils-build --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --target-shared --with-boost /apps/todi/boost/1.50sn/gnu_434
+
+# Build cbtf components using the krell-root
+./install-tool --build-cbtf-all --target-arch cray-xk --target-shared --cbtf-prefix /users/jeg/todi/cbtf_only_v1.1 --krell-root-prefix /users/jeg/todi/new_krellroot_v2.1  --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-boost /apps/todi/boost/1.50sn/gnu_434
+
+# Build only OSS using the cbtf components and the krell-root
+./install-tool --build-onlyosscbtf --krell-root-prefix /users/jeg/todi/new_krellroot_v2.1  --cbtf-prefix /users/jeg/todi/cbtf_only_v1.1 --openss-prefix /users/jeg/todi/osscbtf_v2.1  --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-boost /apps/todi/boost/1.50sn/gnu_434 
+
+
+----------------
+FROM: vulcan at LLNL: (not verified with 2.2)
+
+# Use new build method that follows the --runtime-only compute node build
+# followed by the front-end build referencing the runtime by --with-runtime-dir
+
+# First build the OSS vulcan compute node portion of OSS:
+#
+
+./install-tool --runtime-only --target-shared --target-arch bgq --build-krell-root --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/bgq/krellroot_v2.1u6/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --force-binutils-build
+
+./install-tool --runtime-only --target-shared --target-arch bgq --build-offline --openss-prefix /usr/global/tools/openspeedshop/oss-dev/bgq/oss_offline_v2.1u6/bgq --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/bgq/krellroot_v2.1u6/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc 
+
+# Next build the OSS vulcan front-end node portion of OSS: (use --with-runtime-dir option -> oss compute node install path)
+# I needed to build python, maybe there is one installed somewhere on the
+# system 
+./install-tool --build-python --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/bgq/python_root
+
+./install-tool --build-krell-root --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/bgq/krellroot_v2.1u6 --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --force-binutils-build
+#./install-tool --build-krell-root --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/bgq/krellroot_v2.1u6 --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --skip-binutils-build  --skip-libelf-build --skip-libdwarf-build --skip-libunwind-build --skip-libmonitor-build --skip-boost-build --skip-xercesc-build --skip-vampirtrace-build --skip-papi-build
+
+./install-tool --build-offline --openss-prefix /usr/global/tools/openspeedshop/oss-dev/bgq/oss_offline_v2.1u6 --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/bgq/krellroot_v2.1u6 --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --with-runtime-dir /usr/global/tools/openspeedshop/oss-dev/bgq/oss_offline_v2.1u6/bgq --with-python /usr/global/tools/openspeedshop/oss-dev/bgq/python_root
+
+FROM: cetus/mira at ANL: (bgq system, not verified with 2.2)
+
+# Use new build method that follows the --runtime-only compute node build
+# followed by the front-end build referencing the runtime by --with-runtime-dir
+
+# ----- First build cetus/mira compute node:
+#
+# Build compute node krellroot only
+./install-tool --runtime-only --target-shared --target-arch bgq --build-krell-root --krell-root-prefix /projects/BGQtools_esp/oss/krellroot_v2.1u3/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --force-binutils-build
+
+# Build compute node offline version with krellroot
+./install-tool --runtime-only --target-shared --target-arch bgq --build-offline --openss-prefix /projects/BGQtools_esp/oss/oss_offline_v2.1u3/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --krell-root-prefix /projects/BGQtools_esp/oss/krellroot_v2.1u3/bgq 
+
+# ----- Next build cetus/mira FE node:
+#
+# Build krellroot only
+./install-tool --build-krell-root --krell-root-prefix /projects/BGQtools_esp/oss/krellroot_v2.1u3 --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc 
+
+# Build offline version of OSS with krellroot
+./install-tool --build-offline --openss-prefix /projects/BGQtools_esp/oss/oss_offline_v2.1u3 --krell-root-prefix /projects/BGQtools_esp/oss/krellroot_v2.1u3 --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --with-runtime-dir /projects/BGQtools_esp/oss/oss_offline_v2.1u3/bgq
+
+FE:
+
+## Build offline version of OSS without krellroot
+#./install-tool --build-offline --openss-prefix /projects/BGQtools_esp/oss/oss_offline_v2.1 --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc
+## Just build OSS
+#./install-tool --build-offline --openss-prefix /projects/BGQtools_esp/oss/oss_offline_v2.1 --krell-root-prefix /projects/BGQtools_esp/oss/oss_offline_v2.1 --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc
+#
+## Build krellroot only
+#./install-tool --build-krell-root --krell-root-prefix /projects/BGQtools_esp/oss/krellroot_v2.1u2 --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc 
+#
+#./install-tool --build-krell-root --krell-root-prefix /home/jgalaro/krellroot_v2.1u2 --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc 
+#
+## Build offline version of OSS with krellroot
+#./install-tool --build-offline --openss-prefix /projects/BGQtools_esp/oss/oss_offline_v2.1u2--with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc  --krell-root-prefix /projects/BGQtools_esp/oss/krellroot_v2.1u2 
+#
+#./install-tool --build-offline --openss-prefix /home/jgalaro/oss_offline_v2.1u2--with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc  --krell-root-prefix /home/jgalaro/krellroot_v2.1u2 
+#compute node:
+#
+## Build offline version of OSS without krellroot
+#./install-tool --target-shared --target-arch bgq --build-offline --openss-prefix /projects/BGQtools_esp/oss/oss_offline_v2.1/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc
+#
+## Build krellroot only
+#./install-tool --target-shared --target-arch bgq --build-krell-root --krell-root-prefix /projects/BGQtools_esp/oss/krellroot_v2.1u2/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --force-binutils-build
+#
+#./install-tool --target-shared --target-arch bgq --build-krell-root --krell-root-prefix /home/jgalaro/krellroot_v2.1u2/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --force-binutils-build
+#
+## Build offline version of OSS with krellroot
+#./install-tool --target-shared --target-arch bgq --build-offline --openss-prefix /projects/BGQtools_esp/oss/oss_offline_v2.1u2/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --krell-root-prefix /projects/BGQtools_esp/oss/krellroot_v2.1u2/bgq 
+#
+#./install-tool --target-shared --target-arch bgq --build-offline --openss-prefix /home/jgalaro/oss_offline_v2.1u2/bgq --with-mpich2 /bgsys/drivers/ppcfloor/comm/gcc --krell-root-prefix /home/jgalaro/krellroot_v2.1u2/bgq 
+#
+#----------------
+#
+
+----------------
+FROM: intrepid at ANL: (bgp, not verified with 2.2)
+(needs updating to the --runtime-only method, see above for examples)
+
+./install-tool --build-krell-root --krell-root-prefix /home/jgalaro/krellroot_v2.1 --with-mpich2 /bgsys/drivers/ppcfloor/comm --force-binutils-build --force-libelf-build
+
+./install-tool --target-shared --target-arch bgp --build-krell-root --krell-root-prefix /home/jgalaro/krellroot_v2.1/bgp --with-mpich2 /bgsys/drivers/ppcfloor/comm --force-binutils-build --force-libelf-build
+
+./install-tool --build-offline --openss-prefix /home/jgalaro/oss_offline_v2.1 --krell-root-prefix /home/jgalaro/krellroot_v2.1 --with-mpich2 /bgsys/drivers/ppcfloor/comm  
+
+./install-tool --target-shared --target-arch bgp --build-offline --openss-prefix /home/jgalaro/oss_offline_v2.1/bgp --krell-root-prefix /home/jgalaro/krellroot_v2.1/bgp --with-mpich2 /bgsys/drivers/ppcfloor/comm  
+
+----------------
+FROM: mustang at LANL: (not updated for 2.2 yet)
+
+module load /usr/projects/packages/openspeedshop/jegsgi/modulefiles/mustang-cmake-2.8.10
+
+./install-tool --build-krell-root --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/krellroot_v2.1 --with-openmpi /usr/projects/hpcsoft/mustang/openmpi/1.4.4-gnu --with-mvapich2 /usr/projects/hpcsoft/mustang/mvapich2/1.8-gcc-4.4
+
+./install-tool --build-cbtf --cbtf-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/cbtf_only_v1.1 --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/krellroot_v2.1 --with-openmpi /usr/projects/hpcsoft/mustang/openmpi/1.4.4-gnu --with-mvapich2 /usr/projects/hpcsoft/mustang/mvapich2/1.8-gcc-4.4
+
+./install-tool --build-onlyosscbtf --openss-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/osscbtf_v2.1 --cbtf-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/cbtf_only_v1.1 --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/krellroot_v2.1 --with-openmpi /usr/projects/hpcsoft/mustang/openmpi/1.4.4-gnu --with-mvapich2 /usr/projects/hpcsoft/mustang/mvapich2/1.8-gcc-4.4
+
+----------------
+FROM: moonlight at LANL: (not updated for 2.2 yet)
+
+module load cmake/2.8.12.1 cudatoolkit
+
+./install-tool --build-krell-root --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/krellroot_v2.1u4 --with-openmpi /usr/projects/hpcsoft/toss2.1/moonlight/openmpi/1.6.5-gcc-4.4 --with-mvapich2 /usr/projects/hpcsoft/toss2.1/moonlight/mvapich2/1.8-gcc-4.4 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0
+
+./install-tool --build-offline --openss-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/ossoff_v2.1u4 --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/krellroot_v2.1u4 --with-openmpi /usr/projects/hpcsoft/toss2.1/moonlight/openmpi/1.6.5-gcc-4.4 --with-mvapich2 /usr/projects/hpcsoft/toss2.1/moonlight/mvapich2/1.8-gcc-4.4 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0
+
+./install-tool --build-cbtf --cbtf-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/cbtf_only_v1.1u4 --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/krellroot_v2.1u4 --with-openmpi /usr/projects/hpcsoft/toss2.1/moonlight/openmpi/1.6.5-gcc-4.4 --with-mvapich2 /usr/projects/hpcsoft/toss2.1/moonlight/mvapich2/1.8-gcc-4.4 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0
+
+./install-tool --build-onlyosscbtf --openss-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/osscbtf_v2.1u4 --cbtf-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/cbtf_only_v1.1u4 --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/krellroot_v2.1u4 --with-openmpi /usr/projects/hpcsoft/toss2.1/moonlight/openmpi/1.6.5-gcc-4.4 --with-mvapich2 /usr/projects/hpcsoft/toss2.1/moonlight/mvapich2/1.8-gcc-4.4 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0
+
+FROM: shepard and armstrong: BUILD INTO home directory (using krell root built components): (not updated for 2.2 yet)
+
+# -----------------------------
+# First Build the compute node version (root and oss versions if you use the recommended krell externals root build):
+# For COMPUTE NODE builds:
+# ----------------------------------
+
+#module load craype-target-compute_node
+module unload PrgEnv-cray PrgEnv-pgi PrgEnv-gnu PrgEnv-intel
+export CC=gcc
+export CXX=g++
+
+# BUILD IN LUSTRE
+
+./install-tool --runtime-only --target-arch cray-xe --target-shared --build-krell-root --krell-root-install-prefix /p/home/galarowi/krellroot_v2.1u7/cray-xe --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-papi /opt/cray/papi/5.3.2 --with-tls explicit --with-binutils /opt/cray/xc-sysroot/default/usr
+
+./install-tool --runtime-only --target-arch cray-xe --target-shared --build-offline --openss-prefix /p/home/galarowi/openss_offline_v2.1u7/cray-xe --krell-root-install-prefix /p/home/galarowi/krellroot_v2.1u7/cray-xe --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-papi /opt/cray/papi/5.3.2 --with-tls explicit --with-binutils /opt/cray/xc-sysroot/default/usr
+
+# -----------------------------
+# Next build the login node version (root and oss versions if you use the recommended krell externals root build):
+# For LOGIN NODE builds:
+# ----------------------------------
+
+module unload PrgEnv-cray craype-ivybridge
+module load craype-target-native
+module load gcc
+module load python
+module load libuuid
+export LD_LIBRARY_PATH=/p/home/galarowi/python_root/python_root/lib:$LD_LIBRARY_PATH
+export PATH=/p/home/galarowi/cmake_install/bin:$PATH
+
+or
+
+module load default-environment
+
+# BUILD PYTHON because I didn't see one available
+
+./install-tool --build-cmake --krell-root-install-prefix /p/home/galarowi/cmake_install 
+./install-tool --build-python --krell-root-install-prefix /p/home/galarowi/python_root 
+
+export PATH=/p/home/galarowi/cmake_install/bin:$PATH
+export LD_LIBRARY_PATH=/p/home/galarowi/python_root/python_root/lib:$LD_LIBRARY_PATH
+
+./install-tool --build-krell-root --krell-root-install-prefix /p/home/galarowi/krellroot_v2.1u7 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-python /p/home/galarowi/python_root/python_root --with-papi /opt/cray/papi/5.3.2 --force-binutils-build
+
+#./install-tool --build-krell-root --krell-root-install-prefix /p/home/galarowi/krellroot_v2.1u7 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-python /p/home/galarowi/python_root/python_root --with-papi /opt/cray/papi/5.3.2 --skip-libelf-build --skip-vampirtrace-build --skip-dyninst-build --skip-binutils-build --skip-papi-build --skip-libmonitor-build --skip-libunwind-build --skip-libdwarf-build --skip-boost-build --skip-xercesc-build
+
+For shepard:
+./install-tool --build-offline --openss-prefix /p/home/galarowi/openss_offline_v2.1u7 --with-runtime-dir /p/home/galarowi/openss_offline_v2.1u7/cray-xe --krell-root-install-prefix /p/home/galarowi/krellroot_v2.1u7 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-python /p/home/galarowi/python_root/python_root --with-papi /opt/cray/papi/5.3.2 
+
+For armstrong:
+./install-tool --build-offline --openss-prefix /p/home/galarowi/openss_offline_v2.1u7 --with-runtime-dir /p/home/galarowi/openss_offline_v2.1u7/cray-xe --krell-root-install-prefix /p/home/galarowi/krellroot_v2.1u7 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-python /p/home/galarowi/python_root/python_root --with-papi /opt/cray/papi/5.3.2  --enable-bfd
+
+FROM: lightning: BUILD INTO home directory (using krell root built components): (not updated for 2.2 yet)
+
+# -----------------------------
+# First Build the compute node version (root and oss versions if you use the recommended krell externals root build):
+# For COMPUTE NODE builds:
+# ----------------------------------
+
+module unload PrgEnv-cray PrgEnv-pgi PrgEnv-gnu PrgEnv-intel
+export CC=gcc
+export CXX=g++
+
+# BUILD IN LUSTRE
+
+./install-tool --runtime-only --target-arch cray-xe --target-shared --build-krell-root --krell-root-install-prefix /work1/galarowi/krellroot_v2.1u4/cray-xe --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-papi /opt/cray/papi/5.3.0 --with-tls explicit --with-binutils /opt/cray/xc-sysroot/default/usr
+
+./install-tool --runtime-only --target-arch cray-xe --target-shared --build-offline --openss-prefix /work1/galarowi/openss_offline_v2.1u4/cray-xe --krell-root-install-prefix /work1/galarowi/krellroot_v2.1u4/cray-xe --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-papi /opt/cray/papi/5.3.0 --with-tls explicit --with-binutils /opt/cray/xc-sysroot/default/usr
+
+
+# -----------------------------
+# Next build the login node version (root and oss versions if you use the recommended krell externals root build):
+# For LOGIN NODE builds:
+# ----------------------------------
+
+#module unload PrgEnv-cray craype-ivybridge
+#module load craype-target-native
+#module load gcc
+#module load python
+#module load libuuid
+
+or
+
+module load default-environment
+
+# BUILD PYTHON because I didn't see one available
+
+./install-tool --build-cmake --krell-root-install-prefix /work1/galarowi/cmake_install 
+export PATH=/work1/galarowi/cmake_install/bin:$PATH
+
+./install-tool --build-python --krell-root-install-prefix /work1/galarowi/python_root 
+export LD_LIBRARY_PATH=/work1/galarowi/python_root/python_root/lib:$LD_LIBRARY_PATH
+
+./install-tool --build-krell-root --krell-root-install-prefix /work1/galarowi/krellroot_v2.1u4 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-python /work1/galarowi/python_root/python_root --with-papi /opt/cray/papi/5.3.0 
+
+# mrnet failed the first time, so I skipped all the other components build - wish there was a better way to do this
+#./install-tool --build-krell-root --krell-root-install-prefix /work1/galarowi/krellroot_v2.1u4 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-python /work1/galarowi/python_root/python_root --with-papi /opt/cray/papi/5.3.0  --skip-libelf-build --skip-libdwarf-build --skip-libunwind-build --skip-libmonitor-build --skip-boost-build --skip-xercesc-build --skip-vampirtrace-build --skip-dyninst-build
+
+./install-tool --build-offline --openss-prefix /work1/galarowi/openss_offline_v2.1u4 --with-runtime-dir /work1/galarowi/openss_offline_v2.1u4/cray-xe --krell-root-install-prefix /work1/galarowi/krellroot_v2.1u4 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-python /work1/galarowi/python_root/python_root --with-papi /opt/cray/papi/5.3.0 
+
+
+FROM: garnet: BUILD INTO /lustre/work2 directory (using krell root built components):
+
+# -----------------------------
+# First Build the compute node version (root and oss versions if you use the recommended krell externals root build):
+# For COMPUTE NODE builds:
+# ----------------------------------
+
+module swap PrgEnv-pgi PrgEnv-gnu
+export CC=gcc
+export CXX=g++
+
+# Build root components runtime only
+./install-tool --runtime-only --target-arch cray --target-shared --build-krell-root --krell-root-install-prefix /lustre/work2/galarowi/krellroot_v2.2.3/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-papi /opt/cray/papi/default --with-alps /opt/cray/alps/default
+
+# Build offline runtime only
+./install-tool --build-offline --target-shared --target-arch cray --runtime-only --openss-prefix /lustre/work2/galarowi/ossoff_v2.2.3/compute --krell-root-install-prefix /lustre/work2/galarowi/krellroot_v2.2.3/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-papi /opt/cray/papi/default 
+
+# Build cbtf runtime only
+./install-tool --build-cbtf-all --target-shared --target-arch cray --runtime-only --cbtf-prefix /lustre/work2/galarowi/cbtf_all_v2.2.3/compute --krell-root-install-prefix /lustre/work2/galarowi/krellroot_v2.2.3/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-papi /opt/cray/papi/default 
+
+# -----------------------------
+# Next build the login node version (root and oss versions if you use the recommended krell externals root build):
+# -----------------------------
+# ----------------------------------
+# For LOGIN NODE builds
+# ----------------------------------
+
+module unload PrgEnv-pgi craype-interlagos PrgEnv-gnu
+module load craype-target-native
+module load gcc
+export SYSROOT_DIR=/opt/cray/xe-sysroot/default
+
+# Build root components for login nodes
+./install-tool --build-krell-root --krell-root-install-prefix /lustre/work2/galarowi/krellroot_v2.2.3 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-papi /opt/cray/papi/default --with-alps /opt/cray/alps/default
+
+# Build offline for login nodes
+./install-tool --build-offline --openss-prefix /lustre/work2/galarowi/ossoff_v2.2.3 --with-runtime-dir /lustre/work2/galarowi/ossoff_v2.2.3/compute --krell-root-install-prefix /lustre/work2/galarowi/krellroot_v2.2.3 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-papi /opt/cray/papi/default
+
+
+# Build cbtf and openss for login nodes
+./install-tool --runtime-target-arch cray --build-cbtf-all --cbtf-prefix /lustre/work2/galarowi/cbtf_all_v2.2.3 --krell-root-prefix /lustre/work2/galarowi/krellroot_v2.2.3 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-cn-boost /lustre/work2/galarowi/krellroot_v2.2.3/compute --with-cn-mrnet /lustre/work2/galarowi/krellroot_v2.2.3/compute --with-cn-xercesc /lustre/work2/galarowi/krellroot_v2.2.3/compute --with-cn-libmonitor /lustre/work2/galarowi/krellroot_v2.2.3/compute --with-cn-libunwind /lustre/work2/galarowi/krellroot_v2.2.3/compute --with-cn-dyninst /lustre/work2/galarowi/krellroot_v2.2.3/compute --with-cn-papi /opt/cray/papi/default --with-cn-cbtf-krell /lustre/work2/galarowi/cbtf_all_v2.2.3/compute --with-cn-cbtf /lustre/work2/galarowi/cbtf_all_v2.2.3/compute --with-binutils /lustre/work2/galarowi/krellroot_v2.2.3 --with-boost /lustre/work2/galarowi/krellroot_v2.2.3 --with-mrnet /lustre/work2/galarowi/krellroot_v2.2.3 --with-xercesc /lustre/work2/galarowi/krellroot_v2.2.3 --with-libmonitor /lustre/work2/galarowi/krellroot_v2.2.3 --with-libunwind /lustre/work2/galarowi/krellroot_v2.2.3 --with-dyninst /lustre/work2/galarowi/krellroot_v2.2.3 --with-papi /opt/cray/papi/default --with-alps /opt/cray/alps/default
+
+./install-tool --target-arch cray --build-onlyosscbtf --openss-prefix /lustre/work2/galarowi/osscbtf_v2.2.3 --with-cn-cbtf-krell /lustre/work2/galarowi/cbtf_all_v2.2.3/compute --krell-root-prefix /lustre/work2/galarowi/krellroot_v2.2.3 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-papi /opt/cray/papi/default --with-boost /lustre/work2/galarowi/krellroot_v2.2.3 --with-mrnet /lustre/work2/galarowi/krellroot_v2.2.3 --with-xercesc /lustre/work2/galarowi/krellroot_v2.2.3 --with-libmonitor /lustre/work2/galarowi/krellroot_v2.2.3 --with-libunwind /lustre/work2/galarowi/krellroot_v2.2.3 --with-dyninst /lustre/work2/galarowi/krellroot_v2.2.3 --with-libelf /lustre/work2/galarowi/krellroot_v2.2.3 --with-libdwarf /lustre/work2/galarowi/krellroot_v2.2.3 --with-binutils /lustre/work2/galarowi/krellroot_v2.2.3 --cbtf-prefix /lustre/work2/galarowi/cbtf_all_v2.2.3 
+
+
+FROM: spirit (SGI ICE with heterogeneous FE and Compute nodes): (not updated for 2.2 yet)
+
+#
+# Build the compute node code first, then feed the OSS install director to
+# the FE build.  Use --runtime-only flag that only builds the portion that
+# runs on the compute nodes, no client type code is built.
+#
+$ module list
+Currently Loaded Modulefiles:
+  1) gcc-compilers/4.7.3 3) costinit                   5) /app/startup/alias.module      7) /app/startup/login.module
+  2) mpt/2.08            4) /app/startup/shell.module  6) /app/startup/chgaccnt.module   8) /app/startup/login2.module
+
+./install-tool --build-krell-root --krell-root-prefix /home/galarowi/krellroot_v2.1u3/compute --runtime-only --with-mpt /opt/sgi/mpt/mpt-2.08
+
+./install-tool --build-offline --openss-prefix /home/galarowi/ossoff_v2.1u3/compute --krell-root-prefix  /home/galarowi/krellroot_v2.1u3/compute --runtime-only --with-mpt /opt/sgi/mpt/mpt-2.08 
+#
+# Build the Front-end portion of the tool, referencing the compute node
+# portion
+#
+# Here we want the gcc compilers, not the intel ones, we do not build with
+# intel 
+module swap intel-compilers/12.1.0 gcc-compilers/4.7.3
+ or if intel not loaded 
+module load gcc-compilers/4.7.3
+# SGI MPT has mixed MPI standard code, that does not reflect the proper
+# MPI_VERSION and MPI_SUBVERSION in mpi.h.  We work better with 2.08
+module swap mpt/2.07 mpt/2.08
+#
+./install-tool --build-krell-root --krell-root-prefix /home/galarowi/krellroot_v2.1u3 --with-mpt /opt/sgi/mpt/mpt-2.08 --with-binutils /app/wpostool/COST/binutils-2.23 --with-python /app/wpostool/COST/python-2.6.8
+#
+./install-tool --build-krell-root --krell-root-prefix /home/galarowi/krellroot_v2.1u3 --with-mpt /opt/sgi/mpt/mpt-2.08
+# options to use when desiring to skip builds already completed
+# I had trouble building dyninst, so instead of rebuilding all the components
+# that proceeded it, I used the skip options
+#--skip-libunwind-build --skip-xercesc-build --skip-papi-build
+#--skip-libmonitor-build --skip-libdwarf-build  --skip-vampirtrace-build
+ 
+./install-tool --build-krell-root --krell-root-prefix /home/galarowi/krellroot_v2.1u3 --with-mpt /opt/sgi/mpt/mpt-2.08 --with-binutils /app/wpostool/COST/binutils-2.23 --with-python /app/wpostool/COST/python-2.6.8 --skip-libunwind-build --skip-papi-build --skip-libmonitor-build --skip-libdwarf-build  --skip-vampirtrace-build
+ 
+export QTDIR=/work1/home/galarowi/krellroot_v2.1u3
+./install-tool --build-offline --openss-prefix /home/galarowi/ossoff_v2.1u3 --krell-root-prefix /home/galarowi/krellroot_v2.1u3 --with-mpt /opt/sgi/mpt/mpt-2.08  --with-runtime-dir /home/galarowi/ossoff_v2.1u3/compute
+
+----------------
+FROM: mustang at LANL: (not updated for 2.2 yet)
+
+module load /usr/projects/packages/openspeedshop/jegsgi/modulefiles/mustang-cmake-2.8.10
+
+./install-tool --build-krell-root --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/krellroot_v2.1 --with-openmpi /usr/projects/hpcsoft/mustang/openmpi/1.4.4-gnu --with-mvapich2 /usr/projects/hpcsoft/mustang/mvapich2/1.8-gcc-4.4
+
+./install-tool --build-cbtf --cbtf-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/cbtf_only_v1.1 --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/krellroot_v2.1 --with-openmpi /usr/projects/hpcsoft/mustang/openmpi/1.4.4-gnu --with-mvapich2 /usr/projects/hpcsoft/mustang/mvapich2/1.8-gcc-4.4
+
+./install-tool --build-onlyosscbtf --openss-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/osscbtf_v2.1 --cbtf-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/cbtf_only_v1.1 --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/mustang/krellroot_v2.1 --with-openmpi /usr/projects/hpcsoft/mustang/openmpi/1.4.4-gnu --with-mvapich2 /usr/projects/hpcsoft/mustang/mvapich2/1.8-gcc-4.4
+
+----------------
+FROM: moonlight at LANL: (not updated for 2.2 yet)
+
+module load /usr/projects/packages/openspeedshop/jegsgi/modulefiles/moonlight-cmake-2.8.10
+module load cudatoolkit
+
+
+./install-tool --build-krell-root --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/krellroot_v2.1 --with-openmpi /usr/projects/hpcsoft/moonlight/openmpi/1.4.5-gcc-4.4 --with-mvapich2 /usr/projects/hpcsoft/moonlight/mvapich2/1.8-gcc-4.4 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0
+
+./install-tool --build-cbtf --cbtf-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/cbtf_only_v1.1 --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/krellroot_v2.1 --with-openmpi /usr/projects/hpcsoft/moonlight/openmpi/1.4.5-gcc-4.4 --with-mvapich2 /usr/projects/hpcsoft/moonlight/mvapich2/1.8-gcc-4.4 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0
+
+./install-tool --build-onlyosscbtf --openss-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/osscbtf_v2.1 --cbtf-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/cbtf_only_v1.1 --krell-root-install-prefix /usr/projects/packages/openspeedshop/jegsgi/installs/moonlight/krellroot_v2.1 --with-openmpi /usr/projects/hpcsoft/moonlight/openmpi/1.4.5-gcc-4.4 --with-mvapich2 /usr/projects/hpcsoft/moonlight/mvapich2/1.8-gcc-4.4 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0
+
+
+
+
+----------------
+FROM: redsky at Sandia: (not updated for 2.2 yet)
+
+module purge
+module load cmake 
+
+./install-tool --build-krell-root --krell-root-prefix /projects/OSS/redsky/krellroot_v2.1u4a --force-libelf-build --with-openmpi /opt/openmpi-1.6-gnu --with-mvapich2 /opt/mvapich2-gnu-shmem-1.7 
+
+./install-tool --build-offline --openss-prefix /projects/OSS/redsky/oss_offline_v2.1u4a --krell-root-prefix /projects/OSS/redsky/krellroot_v2.1u4a --with-openmpi /opt/openmpi-1.6-gnu --with-mvapich2 /opt/mvapich2-gnu-shmem-1.7 
+
+./install-tool --build-cbtf --cbtf-install-prefix /projects/OSS/redsky/cbtf_only_v1.1u4a --krell-root-prefix /projects/OSS/redsky/krellroot_v2.1u4a --with-openmpi /opt/openmpi-1.6-gnu --with-mvapich2 /opt/mvapich2-gnu-shmem-1.7 
+
+./install-tool --build-onlyosscbtf --openss-install-prefix /projects/OSS/redsky/osscbtf_v2.1u4a --cbtf-install-prefix /projects/OSS/redsky/cbtf_only_v1.1u4a --krell-root-prefix /projects/OSS/redsky/krellroot_v2.1u4a --with-openmpi /opt/openmpi-1.6-gnu --with-mvapich2 /opt/mvapich2-gnu-shmem-1.7 
+
+----------------
+FROM: chama at Sandia: (not updated for 2.2 yet)
+
+module purge
+module load chama-cmake cudatoolkit gnu
+
+./install-tool --build-krell-root --krell-root-prefix /projects/OSS/chama/krellroot_v2.1u4a --with-openmpi /opt/openmpi-1.6-gnu --with-mvapich2 /opt/mvapich2-gnu-shmem-1.7 --with-mvapich /opt/mvapich-gnu-shmem-1.2 --force-boost-build --force-libelf-build
+
+#./install-tool --build-krell-root --krell-root-prefix /projects/OSS/chama/krellroot_v2.1u4a --with-openmpi /opt/openmpi-1.6-gnu --with-mvapich2 /opt/mvapich2-gnu-shmem-1.7 --with-mvapich /opt/mvapich-gnu-shmem-1.2 --force-libelf-build --skip-binutils-build --skip-libdwarf-build --skip-libunwind-build --skip-papi-build --skip-vampirtrace-build --skip-sqlite-build --skip-xercesc-build --skip-libmonitor-build --skip-dyninst-build --skip-mrnet-build --skip-boost-build 
+
+./install-tool --build-offline --openss-prefix /projects/OSS/chama/oss_offline_v2.1u4a --krell-root-prefix /projects/OSS/chama/krellroot_v2.1u4a --with-openmpi /opt/openmpi-1.6-gnu --with-mvapich2 /opt/mvapich2-gnu-shmem-1.7 --with-mvapich /opt/mvapich-gnu-shmem-1.2 
+
+./install-tool --build-cbtf --cbtf-install-prefix /projects/OSS/chama/cbtf_only_v1.1u4a --krell-root-prefix /projects/OSS/chama/krellroot_v2.1u4a --with-openmpi /opt/openmpi-1.6-gnu --with-mvapich2 /opt/mvapich2-gnu-shmem-1.7 --with-mvapich /opt/mvapich-gnu-shmem-1.2 --with-cuda /opt/cudatoolkit-5.0 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI
+
+./install-tool --build-onlyosscbtf --openss-install-prefix /projects/OSS/chama/osscbtf_v2.1u4a --cbtf-install-prefix /projects/OSS/chama/cbtf_only_v1.1u4a --krell-root-prefix /projects/OSS/chama/krellroot_v2.1u4a --with-openmpi /opt/openmpi-1.6-gnu --with-mvapich2 /opt/mvapich2-gnu-shmem-1.7 --with-mvapich /opt/mvapich-gnu-shmem-1.2 --with-cuda /opt/cudatoolkit-5.0 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI
+
+----------------
+FROM: rzgpu at LLNL (not verified with 2.2)
+
+./install-tool --build-krell-root --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/rzgpu/krellroot_v2.1 
+
+./install-tool --build-cbtf --cbtf-install-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/rzgpu/cbtf_only_v1.1 --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/rzgpu/krellroot_v2.1 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0
+
+./install-tool --build-onlyosscbtf --openss-install-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/rzgpu/osscbtf_v2.1 --cbtf-install-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/rzgpu/cbtf_only_v1.1 --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/rzgpu/krellroot_v2.1 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0
+
+
+
+----------------
+FROM: cab at LLNL: (not verified with 2.2)
+
+./install-tool --build-ompt --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/cab/ompt13 
+
+./install-tool --build-krell-root --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/cab/krellroot_v2.1u6 --force-binutils-build 
+./install-tool --build-krell-root --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/cab/krellroot_v2.1u6  --skip-binutils-build  --skip-libelf-build --skip-libdwarf-build --skip-libunwind-build --skip-libmonitor-build --skip-boost-build --skip-xercesc-build --skip-vampirtrace-build --skip-papi-build
+
+./install-tool --build-offline --openss-prefix  /usr/global/tools/openspeedshop/oss-dev/x8664/cab/oss_offline_v2.1u6 --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/cab/krellroot_v2.1u6 
+
+./install-tool --build-cbtf --cbtf-install-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/cab/cbtf_only_v1.1u6 --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/cab/krellroot_v2.1u6 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0 --with-ompt /usr/global/tools/openspeedshop/oss-dev/x8664/cab/ompt13
+
+./install-tool --build-onlyosscbtf --openss-install-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/cab/osscbtf_v2.1u6 --cbtf-install-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/cab/cbtf_only_v1.1u6 --krell-root-prefix /usr/global/tools/openspeedshop/oss-dev/x8664/cab/krellroot_v2.1u6 --with-cupti /opt/cudatoolkit-5.0/extras/CUPTI --with-cuda /opt/cudatoolkit-5.0 --with-ompt /usr/global/tools/openspeedshop/oss-dev/x8664/cab/ompt13
+
+----------------
+FROM: cori at NERSC (cray system)
+
+# Build the compute node version of the tools and supporting components first
+
+# Set up the build environment for generating compute node code
+
+module unload PrgEnv-pgi PrgEnv-gnu PrgEnv-cray PrgEnv-intel
+module load PrgEnv-gnu
+module load /opt/cray/ari/modulefiles/alps/5.2.4-2.0502.9774.31.11.ari
+module load cori-cmake-3.2.2
+module load cudatoolkit
+module load gcc
+
+#./install-tool --build-boost --target-shared --target-arch cray --runtime-only --krell-root-prefix /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49
+#./install-tool --build-dyninst --target-shared --target-arch cray --runtime-only --krell-root-prefix /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-boost /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-libdwarf /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-libelf /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-binutils /global/u2/j/jgalaro/cori/krellroot_stable/compute
+#./install-tool --build-mrnet --target-shared --target-arch cray --runtime-only --krell-root-prefix /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-alps /opt/cray/alps/5.2.4-2.0502.9774.31.11.ari --with-boost /global/u2/j/jgalaro/cori/krellroot_stable/compute
+
+# Build the krellroot for the compute nodes
+./install-tool --build-krell-root --target-shared --target-arch cray --runtime-only --krell-root-prefix /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-alps /opt/cray/alps/5.2.4-2.0502.9774.31.11.ari
+
+# Build OSS offline compute node version using the krellroot for the compute nodes
+./install-tool --build-offline --target-shared --target-arch cray --runtime-only --openss-prefix /global/u2/j/jgalaro/cori/oss_offline_stable/compute --krell-root-install-prefix /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-boost /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49
+
+# Build CBTF compute node version using the krellroot for the compute nodes
+./install-tool --build-cbtf-all --runtime-only --target-arch cray --target-shared --cbtf-prefix /global/u2/j/jgalaro/cori/jgalaro/cbtf_only_stable/compute --krell-root-prefix /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49
+
+
+# Build the front-end node version of the tools and supporting components after the compute node version
+# Set up the environment for building front-end components and tools
+
+FE NODE:
+module unload PrgEnv-pgi/5.2.40 PrgEnv-gnu PrgEnv-cray PrgEnv-intel
+module unload /opt/cray/craype/2.4.2/modulefiles/craype-haswell
+module load cori-cmake-3.2.2
+module load cudatoolkit
+module unload cray-mpich/7.2.5 cray-shmem/7.2.5
+module unload craype-network-aries
+module load craype-network-none
+module load /opt/cray/ari/modulefiles/alps/5.2.4-2.0502.9774.31.11.ari
+module load gcc
+
+# Had to build a version of cmake on cori - none available
+./install-tool --build-cmake --krell-root-prefix /global/u2/j/jgalaro/cori/cmake-3.2.2
+
+#./install-tool --build-mrnet --krell-root-prefix /global/u2/j/jgalaro/cori/krellroot_stable --with-alps /opt/cray/alps/5.2.4-2.0502.9774.31.11.ari --with-boost /global/u2/j/jgalaro/cori/krellroot_stable
+
+# Build the krellroot for the front-end nodes
+./install-tool --build-krell-root  --krell-root-prefix /global/u2/j/jgalaro/cori/krellroot_stable --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49  --with-alps /opt/cray/alps/5.2.4-2.0502.9774.31.11.ari
+
+# Build OSS offline front-end version using the krellroot for the front-end nodes
+./install-tool --build-offline --openss-prefix /global/u2/j/jgalaro/cori/oss_offline_stable --krell-root-install-prefix /global/u2/j/jgalaro/cori/krellroot_stable --with-boost /global/u2/j/jgalaro/cori/krellroot_stable --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49  --with-runtime-dir /global/u2/j/jgalaro/cori/oss_offline_stable/compute
+
+# Build CBTF front-end version using the krellroot for the front-end nodes
+./install-tool --runtime-target-arch cray --build-cbtf-all --cbtf-prefix /global/u2/j/jgalaro/cori/jgalaro/cbtf_only_stable --krell-root-prefix /global/u2/j/jgalaro/cori/krellroot_stable --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-cn-boost /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-cn-mrnet /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-cn-xercesc /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-cn-libmonitor /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-cn-libunwind /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-cn-dyninst /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-cn-papi /global/u2/j/jgalaro/cori/krellroot_stable/compute --with-cn-cbtf-krell /global/u2/j/jgalaro/cori/jgalaro/cbtf_only_stable/compute --with-cn-cbtf /global/u2/j/jgalaro/cori/jgalaro/cbtf_only_stable/compute --with-binutils /global/u2/j/jgalaro/cori/krellroot_stable --with-boost /global/u2/j/jgalaro/cori/krellroot_stable --with-mrnet /global/u2/j/jgalaro/cori/krellroot_stable --with-xercesc /global/u2/j/jgalaro/cori/krellroot_stable --with-libmonitor /global/u2/j/jgalaro/cori/krellroot_stable --with-libunwind /global/u2/j/jgalaro/cori/krellroot_stable --with-dyninst /global/u2/j/jgalaro/cori/krellroot_stable --with-papi /global/u2/j/jgalaro/cori/krellroot_stable --with-alps /opt/cray/alps/5.2.4-2.0502.9774.31.11.ari
+
+# Build OSS/CBTF front-end version using the krellroot for the front-end nodes
+./install-tool --target-arch cray --build-onlyosscbtf --openss-prefix /global/u2/j/jgalaro/cori/jgalaro/osscbtf_stable --with-cn-cbtf-krell /global/u2/j/jgalaro/cori/jgalaro/cbtf_only_stable/compute --krell-root-prefix /global/u2/j/jgalaro/cori/krellroot_stable --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/49 --with-papi /global/u2/j/jgalaro/cori/krellroot_stable --with-boost /global/u2/j/jgalaro/cori/krellroot_stable --with-mrnet /global/u2/j/jgalaro/cori/krellroot_stable --with-xercesc /global/u2/j/jgalaro/cori/krellroot_stable --with-libmonitor /global/u2/j/jgalaro/cori/krellroot_stable --with-libunwind /global/u2/j/jgalaro/cori/krellroot_stable --with-dyninst /global/u2/j/jgalaro/cori/krellroot_stable --with-libelf /global/u2/j/jgalaro/cori/krellroot_stable --with-libdwarf /global/u2/j/jgalaro/cori/krellroot_stable --with-binutils /global/u2/j/jgalaro/cori/krellroot_stable --cbtf-prefix /global/u2/j/jgalaro/cori/jgalaro/cbtf_only_stable 
+
+----------------
+FROM: babbage at NERSC (Intel MIC)
+
+./install-tool --build-krell-root --enable-mic --runtime-only --krell-root-prefix /global/u2/j/jgalaro/babbage/krellroot_v2.1u5/compute --with-papi /usr/common/usg/papi/mic-5.3.0_gcc-4.7.0
+
+./install-tool --build-offline --enable-mic --runtime-only --openss-prefix /global/u2/j/jgalaro/babbage/ossoff_v2.1u5/compute --with-papi /usr/common/usg/papi/mic-5.3.0_gcc-4.7.0 --krell-root-prefix /global/u2/j/jgalaro/babbage/krellroot_v2.1u5/compute
+
+----------------
+FROM: hopper at NERSC (not verified with 2.2)
+
+module swap PrgEnv-pgi PrgEnv-gnu
+
+# Build the offline version of OSS w/o krellroot
+./install-tool --build-offline --target-arch cray-xe --target-shared --openss-prefix /global/u2/j/jgalaro/hopper/oss_offline_v2.1u5 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-boost /usr/common/usg/boost/1.51/gnu --force-binutils-build
+
+# Build the krellroot
+./install-tool --build-krell-root --target-arch cray-xe --krell-root-prefix /global/u2/j/jgalaro/hopper/krellroot_v2.1u5 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47 --with-boost /usr/common/usg/boost/1.51/gnu
+
+# Build the offline version of OSS using krellroot
+./install-tool --build-offline --target-arch cray-xe --openss-prefix /global/u2/j/jgalaro/hopper/oss_offline_v2.1u5 --krell-root-prefix /global/u2/j/jgalaro/hopper/krellroot_v2.1u5 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47  --with-boost /usr/common/usg/boost/1.51/gnu
+
+# Build the cbtf using krellroot
+./install-tool --build-cbtf-all --cbtf-install-prefix  /global/u2/j/jgalaro/hopper/cbtf_only_v1.1u5 --target-arch cray-xe --krell-root-prefix /global/u2/j/jgalaro/hopper/krellroot_v2.1u5 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47  --with-boost /usr/common/usg/boost/1.51/gnu
+
+# Build the cbtf version of OSS using krellroot and cbtf
+./install-tool --build-onlyosscbtf --target-arch cray-xe --openss-install-prefix /global/u2/j/jgalaro/hopper/osscbtf_v2.1u5 --cbtf-install-prefix /global/u2/j/jgalaro/hopper/cbtf_only_v1.1u5 --krell-root-prefix /global/u2/j/jgalaro/hopper/krellroot_v2.1u5 --with-mpich2 /opt/cray/mpt/default/gni/mpich2-gnu/47  --with-boost /usr/common/usg/boost/1.51/gnu
+
+
+----------------
+FROM: pfe at NASA: (not verified with 2.2)
+
+module load gcc/4.7.3 boost/1.50.0 cmake cuda/6.0 python/2.7.6
+
+./install-tool --build-krell-root --krell-root-prefix /home4/jgalarow/krellroot_v2.1u5b --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mpich /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc --with-python /nasa/python/2.7.6 --force-libelf-build --with-boost /nasa/boost/1.50.0 --with-cupti /nasa/cuda/6.0/extras/CUPTI --with-cuda /nasa/cuda/6.0
+
+./install-tool --build-cbtf-all --cbtf-install-prefix  /home4/jgalarow/cbtf_only_v1.1u5b --krell-root-prefix /home4/jgalarow/krellroot_v2.1u5b --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mpich /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc --with-boost /nasa/boost/1.50.0 --with-cupti /nasa/cuda/6.0/extras/CUPTI --with-cuda /nasa/cuda/6.0 --with-python /nasa/python/2.7.6 
+
+./install-tool --build-onlyosscbtf --openss-prefix /home4/jgalarow/osscbtf_v2.1u5b --cbtf-install-prefix /home4/jgalarow/cbtf_only_v1.1u5b --krell-root-prefix /home4/jgalarow/krellroot_v2.1u5b --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich /nasa/intel/impi/4.1.1.036 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc  --with-cupti /nasa/cuda/6.0/extras/CUPTI --with-cuda /nasa/cuda/6.0 --with-boost /nasa/boost/1.50.0 --with-python /nasa/python/2.7.6
+
+./install-tool --build-offline --openss-prefix /home4/jgalarow/oss_offline_v2.1u5b --krell-root-prefix /home4/jgalarow/krellroot_v2.1u5b --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mpich /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc --with-python /nasa/python/2.7.6 --with-boost /nasa/boost/1.50.0
+
+#./install-tool --build-cbtf-all --cbtf-install-prefix  /home4/jgalarow/oss_cbtf_combined_u5 --krell-root-prefix /home4/jgalarow/krellroot_v2.1u5 --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc --with-boost /nasa/boost/1.50.0 --with-cupti /nasa/cuda/6.0/extras/CUPTI --with-cuda /nasa/cuda/6.0 --with-python /nasa/python/2.7.6
+
+#./install-tool --build-onlyosscbtf --openss-prefix /home4/jgalarow/oss_cbtf_combined_u5 --cbtf-install-prefix /home4/jgalarow/oss_cbtf_combined_u5 --krell-root-prefix /home4/jgalarow/krellroot_v2.1u5 --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc  --with-cupti /nasa/cuda/6.0/extras/CUPTI --with-cuda /nasa/cuda/6.0 --with-boost /nasa/boost/1.50.0 --with-python /nasa/python/2.7.6
+
+# to get around space issues, had to delete RPMS and BUILD after the dyninst build (which is huge)
+#./install-tool --build-krell-root --krell-root-prefix /home4/jgalarow/krellroot_v2.1 --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc --with-python /nasa/python/2.7.6 --force-libelf-build --with-boost /nasa/boost/1.50.0 --skip-dyninst-build --skip-binutils-build --skip-papi-build --skip-libmonitor-build --skip-libunwind-build --skip-libdwarf-build
+
+#./install-tool --build-krell-root --krell-root-prefix /home4/jgalarow/krellroot_v2.1u3 --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc --with-python /nasa/python/2.7.6 --force-libelf-build --with-boost /nasa/boost/1.50.0
+
+#./install-tool --build-offline --openss-prefix /home4/jgalarow/oss_offline_v2.1u3 --krell-root-prefix /home4/jgalarow/krellroot_v2.1u3 --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc --with-python /nasa/python/2.7.6 --with-boost /nasa/boost/1.50.0
+
+#./install-tool --build-offline --openss-prefix /home4/jgalarow/oss_offline_v2.1u5 --krell-root-prefix /home4/jgalarow/krellroot_v2.1u5 --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc --with-python /nasa/python/2.7.6 --with-boost /nasa/boost/1.50.0
+
+offline: All in one:
+#./install-tool --build-offline --openss-prefix /home4/jgalarow/oss_offline_v2.1 --with-mpt /nasa/sgi/mpt/2.11a120 --with-mpich2 /nasa/intel/impi/4.1.1.036 --with-mvapich2 /nasa/mvapich2/1.6.sles11/gcc --with-python /nasa/python/2.7.6
+----------------
+
+SANDIA: node045 (ARM processor): (not verified with 2.2)
+
+./install-tool --build-krell-root --krell-root-prefix /home/jgalaro/root --with-openmpi /home/projects/arm64/openmpi/1.8.2/gnu/4.9.1/lib
+
+./install-tool --build-offline --openss-prefix /home/jgalaro/ossoff_new --krell-root-prefix /home/jgalaro/root --with-python /home/jgalaro/python_root/python_root --with-openmpi /home/projects/arm64/openmpi/1.8.2/gnu/4.9.1/lib --enable-debug

@@ -1,0 +1,202 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2005 Silicon Graphics, Inc. All Rights Reserved.
+# Copyright (c) 2006-2011 Krell Institute. All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+# Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+
+from sys import *
+import sys
+import os
+import threading
+from time import *
+from string import *
+from threading import *
+#from datetime import *
+
+
+def too_long():
+	os.system('killall -s 9 openss')
+
+def createTestList():
+	checktemptestlist = os.system('test -e temptestlist')
+	if checktemptestlist == 0:
+        	os.system('rm -f temptestlist')
+	os.system('ls -1 *.tst >> temptestlist')
+
+def runTest(testName):
+	checkinput = os.system('test -e input.script')
+	if checkinput == 0:
+		os.system('rm -f input.script')
+	#test_input = open(testName, 'r')
+	#testCommand = test_input.readline()
+	#linesToCompare = test_input.readline()
+	#test_input.close()
+	t = Timer(1000, too_long)
+	t.start()
+	os.system('./'+testName+ '>> '+ testName+'.output')
+	t.cancel()
+
+def iterateThroughTestList(fileptr):
+	con_input = open('temptestlist', 'r')
+        while 1:
+                config_line = con_input.readline()
+                if not config_line:
+                        break
+                test_name = config_line
+		i = 0
+	        while 1:
+                	if test_name[i] == '.':
+                        	break
+                	else:
+                        	i += 1
+        	testName = test_name[0:i+4]
+
+		runTest(testName)
+		CompareResults(testName, fileptr)
+               
+        con_input.close()
+
+def CompareResults(testName, fileptr):
+	outputfilename = testName + '.output'
+	expectedfilename = testName + '.expected'
+	outputfileptr = open(outputfilename, 'r')
+	expectedfileptr = open(expectedfilename, 'r')
+	nooutput = 1 	
+	failure_reason = 0
+	if testName[0:7] == 'restore':
+		while 1:
+			tempfileline = outputfileptr.readline()
+			if not tempfileline:
+				failure_reason = 3
+				break
+			if tempfileline[0:12] == 'The restored':
+				nooutput = 0
+				outputfileptr.readline()
+				break
+	while 1:
+		tempfileline = outputfileptr.readline()
+		if not tempfileline:
+			break
+		if tempfileline[0:11] == '        CPU' or tempfileline[0:15] == '            CPU' or tempfileline[0:5] == '  Exc':
+			nooutput = 0
+			if tempfileline[0:5] == '  Exc':
+        	                outputfileptr.readline()
+			break
+	expectedfileptr.readline()
+	test_status = 0
+	previous_expected = 0
+	previous_actual = 0
+	passing_ratio = 1 
+	while 1:
+		if (nooutput == 1):
+			failure_reason = 3
+			passing_ratio = 0
+			break
+		expectedfileline = expectedfileptr.readline()
+		if not expectedfileline:
+			break
+		outputfileline = outputfileptr.readline()
+		if not outputfileline:
+			passing_ratio = 0
+			failure_reason = 3
+			break
+		i = 0
+		while outputfileline[i] == ' ':
+			i +=  1
+		j = i
+		while outputfileline[j] != ' ':
+			j += 1
+		if outputfileline[i:j] == 'Experiment':
+			break
+		actual_time = atof(outputfileline[i:j])
+		i = j+ 1
+		while outputfileline[i] == ' ':
+			i += 1
+		j = i
+		if testName[0:5]== 'state':
+			while (outputfileline[j] != '\n') and (outputfileline[j]!=' '):
+				j += 1
+		else:
+			while (outputfileline[j] != '\n') and (outputfileline[j] != ' ') and (outputfileline[j] != '(') and (outputfileline[j] != '_'):
+				j +=1
+		actual_function = outputfileline[i:j]
+		i = 0
+                while expectedfileline[i] == ' ':
+                        i += 1
+                j = i
+                while expectedfileline[j] != ' ':
+                        j += 1
+                expected_time = atof(expectedfileline[i:j])
+                i = j+ 1
+                while expectedfileline[i] == ' ':
+                        i += 1
+                j = i
+                while (expectedfileline[j] != '\n') and (expectedfileline[j] != ' ') :
+                        j  += 1
+                expected_function = expectedfileline[i:j]
+		if (expected_function == actual_function):
+			if (previous_expected != 0 ):
+				actual_ratio = previous_actual / actual_time
+				expected_ratio = previous_expected / expected_time
+				upper_limit = expected_ratio + (expected_ratio * .25)
+				lower_limit = expected_ratio - (expected_ratio * .25)
+				if not (lower_limit <= actual_ratio <= upper_limit):
+					passing_ratio = 0
+					failure_reason = 1
+		else:
+				passing_ratio = 0
+				failure_reason = 2
+		previous_actual = actual_time
+		previous_expected = expected_time
+        fileptr.write('The test run from: ')
+        fileptr.write(os.getcwd())
+        fileptr.write('\n')
+        fileptr.write('has the following result: ')
+
+	if (passing_ratio== 1) :
+		print testName + ' has PASSED. \n'
+		fileptr.write(testName + ' has PASSED \n')
+	else:
+		print testName + ' has FAILED. \n'
+		fileptr.write(testName + ' has FAILED.  ')
+		if (failure_reason == 1):
+			fileptr.write('The function time ratios are incorrect.\n')
+		if (failure_reason == 3):
+			fileptr.write('Looks like openss crashed or ran too long. \n')
+		if (failure_reason == 2):
+			fileptr.write('The ordering of the functions is incorrect.\n')
+        fileptr.write('*******************************************************')
+        fileptr.write('\n')
+		
+
+
+	 	
+
+if __name__ == '__main__':
+	checkoutput = os.system('test -e *.output')
+        if checkoutput == 0:
+                os.system('rm -f *.output')
+
+	currTime = strftime("%d_%m_%Y_%H%M%S", localtime())
+        resultsFile =  'testresults_' + currTime
+        resultfileptr = open(resultsFile, 'w')
+	tempfileptr = open('testresultsfilename', 'w')
+	tempfileptr.write(resultsFile)
+
+	createTestList()
+	iterateThroughTestList(resultfileptr)
