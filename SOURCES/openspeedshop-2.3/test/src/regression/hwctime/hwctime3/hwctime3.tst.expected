@@ -1,8 +1,0 @@
- Exclusive Overflows  Function (defining location)
-         40000000000  f3_(mutatee: mutatee.f,24)
-         20000000000  f2_(mutatee: mutatee.f,33)
-         10000000000  f1_(mutatee: mutatee.f,43)
-           200000000  MAIN__(mutatee: mutatee.f,1)
-            50000000  _start(mutatee: start.S,47)
-            50000000  main(mutatee)
-            50000000  __libc_start_main(libc.so.6)

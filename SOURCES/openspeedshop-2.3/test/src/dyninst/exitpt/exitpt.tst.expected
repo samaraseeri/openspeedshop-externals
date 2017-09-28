@@ -1,4 +1,0 @@
-i = 0
-Found 1 occurences of exit().
-Found 1 occurences of __libc_thread_freeres().
-SUCCESS mutatee terminated!
