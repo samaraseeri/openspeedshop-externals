@@ -1,0 +1,129 @@
+.\" Process this file with
+.\" groff -man -Tascii OpenSpeedShop.3
+.\"
+.TH OpenSpeedShop 3 "June, 2009" "Open|SpeedShop Reference" "Open|SpeedShop Reference"
+
+.SH NAME
+OpenSpeedShop \- Application Performance Tool
+
+.SH SYNOPSIS
+
+.BR Overview
+
+Open|SpeedShop is an open source multi-platform performance
+tool enabling performance analysis of HPC applications running on
+both single node and large scale Intel, AMD, ARM, Intel Phi, Power PC,
+Power 8, GPU processor based systems, including Cray and IBM Blue
+Gene platforms. Open|SpeedShop is a community effort by the Krell 
+Institute with current direct funding from DOE NNSA. Argo Navis 
+Technologies, LLC, a for-profit company working with Krell, recently 
+won a Phase II NASA SBIR to further develop Open|SpeedShop in the
+area of NVIDIA CUDA performance analysis.
+
+Open|SpeedShop builds on top of a broad list of community 
+infrastructures, most notably Dyninst and MRNet from UW,
+libmonitor from Rice, and PAPI from UTK.  DynInst and MRNet 
+from UW, libMonitor from Rice, and PAPI from UTK. 
+
+In addition, Open|SpeedShop is designed to be modular and extensible. It
+supports several levels of plug-ins which allow users to add their own 
+performance experiments.
+
+Open|SpeedShop has two modes of performance data collection and transport.
+The modes are referred to as: offline and cbtf. In offline mode, the 
+performance information is written to a shared file system location 
+and then read up and processed upon termination of the application.
+The second mode is based on the Component Based Tool Framework (CBTF) 
+technology.  In this mode, the performance information is transported 
+via the CBTF transport mechanism (based on MRNet) from the application 
+to the client tool.  Along the transport network there can be a number of 
+communication node level filtering processes which may perform reduction
+and/or tranformation of the performance data before it arrives at the 
+Open|SpeedShop client tool (openss).
+
+The infrastructure and base components of Open|SpeedShop are released 
+as open source code primarily under LGPL.
+
+Open|SpeedShop gathers information about the user application performance
+such as inclusive and exclusive CPU time, hardware counter events and
+time, detailed information about I/O events/calls, detailed information
+about MPI events/calls, memory leaks and highwater marks, OpenMP specific
+wait and idle information, POSIX thread information, and NVIDIA CUDA event 
+and data transfer information.
+
+The term experiment is used to describe the application and the type 
+of performance data being gathered.
+
+Open|SpeedShop is explicitly designed with usability in mind and is 
+for application developers and computer scientists. The base functionality 
+includes:
+.nf
+
+    * Sampling Experiments (pcsamp)
+    * Support for Callstack Analysis (usertime)
+    * Hardware Performance Counter (hwc, hwcsamp, hwctime)
+    * MPI Profiling and Tracing (mpi, mpip, mpit)
+    * I/O Profiling and Tracing (io, iop, iot)
+    * Memory Analysis Information (mem)
+    * OpenMP Profiling via OMPT Tool Interface (omptp)
+    * POSIX Thread Information (pthreads)
+    * NVIDIA CUDA Profiling and Tracing
+
+.fi
+.BR Features
+
+.nf
+* Four user interface options: 
+    - Batch 
+    - Command Line Interface (CLI)
+    - Graphical User Interface (GUI)
+    - Python scripting API.
+* Two instrumentation modes of operation: 
+    - CBTF  (use of network for data transport) DEFAULT
+      See Also: OpenSpeedShop_cbtf (3)
+    - Offline (use of LD_PRELOAD - link in collector runtime)
+      See Also: OpenSpeedShop_offline (3)
+* Supports multi-platform single system image(SSI) and traditional clusters.
+* Scales to large numbers of processes, threads, and ranks.
+* No need to recompile the users application.
+* View performance data using multiple customizable views.
+* Save and restore performance experiment data and symbol information 
+  for post experiment performance analysis
+* View performance data for all of applications lifetime 
+  or smaller time slices.
+* Compare performance results between processes, threads, or ranks 
+  between a previous experiment and current experiment.
+* GUI Wizard facility and context sensitive help.
+* Interactive CLI help facility which lists the CLI commands, 
+  syntax, and typical usage.
+* Python Scripting API accesses Open|SpeedShop functionality 
+  corresponding to CLI commands.
+* Option to automatically group like performing processes, threads, or ranks.
+* Comprehensive installation scripts.
+.fi
+
+.SH SEE ALSO
+
+The OpenSpeedShop Web site: www.openspeedshop.org
+
+.BR openss (1),
+.BR osspcsamp (1),
+.BR ossusertime (1),
+.BR osshwc (1),
+.BR osshwcsamp (1),
+.BR osshwctime (1),
+.BR ossio (1),
+.BR ossiop (1),
+.BR ossiot (1),
+.BR ossmem (1),
+.BR ossmpi (1),
+.BR ossmpip (1),
+.BR ossmpit (1),
+.BR ossomptp (1)
+.BR osspthreads (1)
+.BR osscuda (1)
+.BR OpenSpeedShop (3)
+.BR OpenSpeedShop_cbtf (3)
+.BR OpenSpeedShop_offline (3)
+
+

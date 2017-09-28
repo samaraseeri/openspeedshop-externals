@@ -1,0 +1,2213 @@
+#!/bin/bash
+# This is the program users should invoke to build and install
+# OpensSpeedShop and its supporting components.
+die()
+{
+    echo "install-tool: $0: error: $*" 1>&2
+    exit 1
+}
+
+usage() {
+    cat << EOF
+usage: $0 [option]
+
+--help, -h
+  This help text.
+
+Introduction:
+  This install script can be used to build the krell externals package (--build-krell-root),
+  the CBTF components and libraries (--build-cbtf-all), and/or the default version of OpenSpeedShop 
+  which now contains both the offline mode of operation and the cbtf mode of operation with 
+  the: (--build-oss) install-tool option.  
+
+  Typical usages examples are followed by the option descriptions. More examples and explanations
+  can be found in the Build and Install Guides for CBTF and Open|SpeedShop.
+
+Typical usage example for cluster/PC build:
+  # Build only the krell-root
+  ./install-tool --build-krell-root 
+                 --krell-root-prefix /opt/krellroot_v2.3.0 
+                 --with-openmpi /opt/openmpi-1.8.2
+
+  # Build cbtf components using the krell-root
+  ./install-tool --build-cbtf-all 
+                 --cbtf-prefix /opt/cbtf_v2.3.0 
+                 --krell-root-prefix /opt/krellroot_v2.3.0 
+                 --with-openmpi /opt/openmpi-1.8.2 
+                 --with-cupti /usr/local/cuda-7.0/extras/CUPTI 
+                 --with-cuda /usr/local/cuda-7.0
+
+  # Build only OSS using the cbtf components and the krell-root
+  ./install-tool --build-oss
+                 --cbtf-prefix /opt/cbtf_v2.3.0  
+                 --krell-root-prefix /opt/krellroot_v2.3.0 
+                 --openss-prefix /opt/osscbtf_v2.3.0 
+                 --with-openmpi /opt/openmpi-1.8.2 
+                 --with-cupti /usr/local/cuda-7.0/extras/CUPTI 
+                 --with-cuda /usr/local/cuda-7.0
+
+Typical in one command usage example for cluster/PC build:
+
+  # Build the krell-root, the cbtf components, and OSS using cbtf instrumentor
+  ./install-tool --build-all 
+                 --cbtf-prefix /opt/cbtf_v2.3.0 
+                 --krell-root-prefix /opt/krellroot_v2.3.0 
+                 --openss-prefix /opt/osscbtf_v2.3.0 
+                 --with-openmpi /opt/openmpi-1.8.2
+
+Option Descriptions:
+
+--krell-root-prefix <directory>
+  Where <directory> is the location to install the components
+  needed for building CBTF and OpenSpeedShop
+  and it's supporting tools and libraries. The default
+  is /opt/KRELLROOT. It is not recommended to use /usr.
+  NOTE: This option will override any setting for
+  the environment variable KRELL_ROOT_PREFIX.
+
+  NOTE: This prefix should be used as the install path
+        when building a specific component (for example:
+        install-tool --build-libelf --krell-root-prefix /opt/libelf-0.8.13
+
+--cbtf-prefix <directory>
+  Where <directory> is the location to install CBTF
+  and it's supporting tools and libraries. The default
+  is /opt/CBTF. It is not recommended to use /usr.
+  NOTE: This option will override any setting for
+  the environment variable CBTF_PREFIX.
+
+--openss-prefix <directory>
+  Where <directory> is the location to install OpenSpeedShop
+  and it's supporting tools and libraries. The default
+  is /opt/OSS. It is not recommended to use /usr.
+  NOTE: This option will override any setting for
+  the environment variable OPENSS_PREFIX.
+
+--build-all
+  Build the krell-root, cbtf components, and openspeedshop
+  The cbtf-prefix, krell-root-prefix, and the openss-prefix must be specified
+
+--build-cbtf-all
+  Build only the cbtf components using the existing krell-root
+  The krell-root-prefix and cbtf-install-prefix must be specified
+
+--build-krell-root
+  Build only the krell-root. The krell-root-prefix must be specified
+
+--build-onlyosscbtf )
+  Build only the OpenSpeedShop component for the cbtf instrumentor 
+  using the cbtf and krell-root components.
+
+  Specify a target architecture
+--target-arch <target>
+  Where acceptable target values are: cray-xk, cray-xe, bgp, bgq, bgqfe
+
+  Specify the compiler to be used for the build, gnu is default
+--build-compiler {gnu, intel}
+
+  Use these MPI installations when building
+--with-mpich <directory>
+--with-mpich2  <directory>
+--with-mpich2-driver  <driver name>
+--with-mvapich  <directory>
+--with-mvapich2  <directory>
+--with-mvapich2-driver  <driver name>
+--with-openmpi  <directory>
+--with-mpt  <directory>
+  Where <directory> is the installed path to the mpi implementation
+  to use for MPI support.
+
+  Build only the component specified by the build clause. 
+  The krell-root-prefix must be specified and components will 
+  be installed into that krell-root-prefix specified directory path.
+--build-autotools
+--build-bison
+--build-boost
+--build-xercesc
+--build-binutils
+--build-flex
+--build-dyninst
+--build-elfutils
+--build-GOTCHA
+--build-libelf
+--build-libdwarf
+--build-libmonitor
+--build-libunwind
+--build-llvm-openmp
+--build-mrnet
+--build-ompt
+--build-papi
+--build-python
+--build-sqlite
+--build-symtabapi
+--build-cmake
+--build-ptgf
+--build-ptgfossgui
+--build-qcustomplot
+--build-graphviz
+--build-QtGraph
+--build-qt3
+--build-vampirtrace
+  Build the experimental CUDA focused GUI Qt4/Qt5
+--build-cbtfargonavisgui
+
+  Enable certain configuration options
+--enable-bfd-symbol-resolution|--enable-bfd
+--enable-debug
+
+  Force these components to be built and installed into the krellroot 
+  or OSS install directories.
+--force-binutils-build
+--force-boost-build
+--force-cmake-build
+--force-dyninst-build
+--force-libelf-build
+--force-libdwarf-build
+--force-libunwind-build
+--force-papi-build
+--force-qt3-build
+--force-sqlite-build
+--force-xercesc-build
+--force-ompt-build
+  Build all of the above by force
+--force-all
+
+--skip-binutils-build
+--skip-boost-build
+--skip-cmake-build
+--skip-dyninst-build
+--skip-libdwarf-build
+--skip-libelf-build
+--skip-libunwind-build
+--skip-mrnet-build
+--skip-ompt-build
+--skip-papi-build
+--skip-qt3-build
+--skip-sqlite-build
+--skip-symtabapi-build
+--skip-vampirtrace-build
+--skip-xercesc-build
+
+
+  Use these non-root or alternative components when building
+--with-binutils <directory>
+--with-boost <directory>
+--with-dyninst <directory>
+--with-expat <directory>
+--with-graphviz <directory>
+--with-libelf <directory>
+--with-libdwarf <directory>
+--with-libmonitor <directory>
+--with-libunwind <directory>
+--with-mrnet <directory>
+--with-papi <directory>
+--with-python <directory>
+--with-python-vers <version number>
+--with-qt <directory>
+--with-qt3 <directory>
+--with-sqlite <directory>
+--with-symtabapi <directory>
+--with-xercesc <directory>
+--with-otf <directory>
+--with-QtGraph <directory>
+--with-vt <directory>
+--with-zlib <directory>
+  Where <directory> is the installed path to the alternative component.
+
+  Use these non-root or alternative compute node components when building a cbtf-krell fe
+  that points to targeted runtimes (cray, mic platforms)
+--with-cn-cbtf <directory>
+--with-cn-cbtf-krell <directory>
+--with-cn-binutils <directory>
+--with-cn-dyninst <directory>
+--with-cn-libelf <directory>
+--with-cn-libdwarf <directory>
+--with-cn-libmonitor <directory>
+--with-cn-libunwind <directory>
+--with-cn-mrnet <directory>
+--with-cn-symtabapi <directory>
+--with-cn-xercesc <directory>
+--with-cn-papi <directory>
+--with-cn-boost <directory>
+  Where <directory> is the installed path to the alternative component.
+
+--with-tls < explicit | implicit >   
+  where the default is implicit
+
+  Only build ptgf gui related components, not qt3 related
+--use-only-ptgf
+
+EOF
+}
+
+export DEFAULT_KRELLROOT=/opt/KRELLROOT
+export DEFAULT_CBTF=/opt/CBTF
+export DEFAULT_OPENSS=/opt/OSS
+
+
+# create robust step by step command tracking with set -x enabled
+#set -x
+
+is_cray_target=0
+is_bg_target=0
+exclude_oss=
+openss_gui_only=
+runtime_gui_only=
+no_rpm=""
+no_alps=""
+create_rpm=""
+build_compiler=""
+
+while test "x$1" != x
+do
+
+    #echo "install-tool: Top of install-tool loop, arg 1=$1"
+    #echo "install-tool: Top of install-tool loop, OPENSS_BUILD_TASK=$OPENSS_BUILD_TASK"
+    #echo "install-tool: Top of install-tool loop, OPENSS_INSTRUMENTOR=$OPENSS_INSTRUMENTOR"
+    #echo "install-tool: Top of install-tool loop, OPENSS_TARGET_ARCH=$OPENSS_TARGET_ARCH"
+    #echo "install-tool: Top of install-tool loop, KRELL_ROOT_BOOST=$KRELL_ROOT_BOOST"
+    #echo "install-tool: Top of install-tool loop, KRELL_ROOT_BOOST_LIB=$KRELL_ROOT_BOOST_LIB"
+    #echo "install-tool: Top of install-tool loop, KRELL_ROOT_TARGET_ARCH=$KRELL_ROOT_TARGET_ARCH"
+
+    case "$1" in
+       -h | --help)
+            usage
+            exit
+	    ;;
+
+       --build-compiler)
+            test "x$2" != x || die "missing argument: $*"
+            build_compiler="$2"
+            if [ ${build_compiler:0:5} == "intel" ]; then
+                #echo "install-tool: build_compiler:0:5=${build_compiler:0:5}"
+                build_compiler="--use-intel"
+                #echo "install-tool: Building with compiler==intel, build_compiler =${build_compiler}"
+            elif [ ${build_compiler:0:3} == "gnu" ]; then
+                #echo "install-tool: build_compiler:0:3=${build_compiler:0:3}"
+                build_compiler="--use-gnu"
+                #echo "install-tool: Building with compiler==gnu, build_compiler =${build_compiler}"
+            else 
+                build_compiler="--use-gnu"
+                #echo "install-tool: Building with default compiler==gnu, , build_compiler=${build_compiler}"
+            fi
+            shift ; shift
+            ;;
+
+       --verbose)
+            export KRELL_ROOT_BUILD_VERBOSE=1
+            shift
+	    ;;
+
+       --use-gnu)
+            build_compiler="--use-gnu"
+            shift
+	    ;;
+
+       --use-intel)
+            build_compiler="--use-intel"
+            shift
+	    ;;
+
+       --use-only-ptgf)
+            export OPENSS_ONLY_BUILD_PTGF=1
+            export KRELL_ROOT_ONLY_BUILD_PTGF=1
+            shift
+	    ;;
+
+       --create-rpm|--rpm)
+            create_rpm="--create-rpm"
+            no_rpm=""
+            shift
+            ;;
+
+       --no-rpm)
+            no_rpm="--no-rpm"
+            create_rpm=""
+            shift
+            ;;
+
+       --use-cti)
+            # no alps implies using the CTI interface in MRNET
+            no_alps="--no-alps"
+            export NO_ALPS_FLAG="true"
+            unset CBTF_ALPS_ROOT
+            unset KRELL_ROOT_ALPS
+            unset ALPS_ROOT
+            shift
+            ;;
+
+       --with-cti)
+            test "x$2" != x || die "missing argument: $*"
+            case "$2" in
+                /* )  dir="$2" ;;
+                * )   dir="`pwd`/$2" ;;
+            esac
+            test -d "$dir" || die "unable to find: $dir"
+            export KRELL_ROOT_CTI="${dir}"
+            shift
+            ;;
+
+       --with-alps)
+            test "x$2" != x || die "missing argument: $*"
+            case "$2" in
+                /* )  dir="$2" ;;
+                * )   dir="`pwd`/$2" ;;
+            esac
+            test -d "$dir" || die "unable to find: $dir"
+            export CBTF_ALPS_ROOT="${dir}"
+            export KRELL_ROOT_ALPS="${dir}"
+            export ALPS_ROOT="${dir}"
+            shift ; shift
+            ;;
+
+       --with-ltdl)
+            test "x$2" != x || die "missing argument: $*"
+            case "$2" in
+                /* )  dir="$2" ;;
+                * )   dir="`pwd`/$2" ;;
+            esac
+            test -d "$dir" || die "unable to find: $dir"
+            export CBTF_LTDL_ROOT="${dir}"
+            export KRELL_ROOT_LTDL="${dir}"
+            export LTDL_ROOT="${dir}"
+            shift ; shift
+            ;;
+
+       --with-cuda)
+            test "x$2" != x || die "missing argument: $*"
+            case "$2" in
+                /* )  dir="$2" ;;
+                * )   dir="`pwd`/$2" ;;
+            esac
+            test -d "$dir" || die "unable to find: $dir"
+            export CUDA_INSTALL_PATH="${dir}"
+            shift ; shift
+            ;;
+
+       --with-cupti)
+            test "x$2" != x || die "missing argument: $*"
+            case "$2" in
+                /* )  dir="$2" ;;
+                * )   dir="`pwd`/$2" ;;
+            esac
+            test -d "$dir" || die "unable to find: $dir"
+            export CUPTI_ROOT="${dir}"
+            shift ; shift
+            ;;
+
+       --with-tls)
+            test "x$2" != x || die "missing argument: $*"
+            case "$2" in
+                explicit )  tls_setting="explicit" ;;
+                implicit )  tls_setting="implicit" ;;
+                * )   tls_setting="implicit" ;;
+            esac
+            export KRELL_ROOT_TLS_TYPE=$tls_setting
+            shift ; shift
+            ;;
+
+       --gui-only)
+            export OPENSS_INSTRUMENTOR="none"
+            export OPENSS_BUILD_TASK="offline"
+	    openss_gui_only="--gui-only"
+            shift
+	    ;;
+
+       --runtime-only)
+	    openss_runtime_only="--runtime-only"
+	    export OPENSS_RUNTIME_ONLY="--runtime-only"
+	    export KRELL_ROOT_RUNTIME_ONLY="--runtime-only"
+            shift
+	    ;;
+
+       --build-offline )
+            export OPENSS_INSTRUMENTOR="offline"
+            export OPENSS_BUILD_TASK="offline"
+	    build_offline_check="--build-offline"
+            shift
+	    ;;
+
+       --build-online )
+            export OPENSS_INSTRUMENTOR="mrnet"
+            export OPENSS_BUILD_TASK="mrnet"
+	    build_online_check="--build-online"
+            shift
+	    ;;
+
+       --build-onlyosscbtf |--build_osscbtf |--build-oss)
+	    build_onlyosscbtf="--onlyosscbtf"
+            export OPENSS_BUILD_TASK="onlyosscbtf"
+            shift
+	    ;;
+
+       --build-onlyossoffline)
+	    build_onlyossoffline="--onlyossoffline"
+            export OPENSS_BUILD_TASK="onlyossoffline"
+            shift
+	    ;;
+
+       --build-all)
+	    build_all="--build-all"
+            shift
+	    ;;
+
+       --build-cbtf)
+	    build_cbtf="--cbtf"
+            shift
+	    ;;
+
+       --build-cbtf-krell)
+	    build_cbtf_krell="--cbtf-krell"
+            shift
+	    ;;
+
+       --build-cbtf-argonavis)
+	    build_cbtf_argonavis="--cbtf-argonavis"
+            shift
+	    ;;
+
+       --build-cbtfargonavisgui)
+	    build_cbtfargonavisgui="--cbtfargonavisgui"
+            shift
+	    ;;
+
+       --build-cbtf-lanl)
+	    build_cbtf_lanl="--cbtf-lanl"
+            shift
+	    ;;
+
+       --build-cbtf-all)
+            export OPENSS_INSTRUMENTOR="cbtfall"
+	    export OPENSS_BUILD_TASK="cbtfall"
+	    build_cbtf_all="--cbtf-all"
+            shift
+	    ;;
+
+       --build-krell-root)
+            export OPENSS_INSTRUMENTOR="krellroot"
+            export OPENSS_BUILD_TASK="krellroot"
+            shift
+	    ;;
+
+       --build-cmake)
+	    build_cmake="--build-cmake"
+            shift
+	    ;;
+
+       --build-expat)
+	    build_expat="--build-expat"
+            shift
+	    ;;
+
+       --build-zlib)
+	    build_zlib="--build-zlib"
+            shift
+	    ;;
+
+       --build-ptgfall)
+	    build_ptgfall="--build-ptgfall"
+            shift
+	    ;;
+
+       --build-ptgf)
+	    build_ptgf="--build-ptgf"
+            shift
+	    ;;
+
+       --build-ptgfossgui)
+	    build_ptgfossgui="--build-ptgfossgui"
+            shift
+	    ;;
+
+       --build-qcustomplot)
+	    build_qcustomplot="--build-qcustomplot"
+            shift
+	    ;;
+
+       --build-graphviz)
+	    build_graphviz="--build-graphviz"
+            shift
+	    ;;
+
+       --build-QtGraph)
+	    build_QtGraph="--build-QtGraph"
+            shift
+	    ;;
+
+       --build-ompt)
+	    build_ompt="--build-ompt"
+            shift
+	    ;;
+
+       --build-llvm-openmp)
+	    build_llvm_openmp="--build-llvm-openmp"
+            shift
+	    ;;
+
+       --build-autotools)
+	    build_autotools="--devel"
+            shift
+	    ;;
+
+       --build-bison)
+	    build_bison="--bison"
+            shift
+	    ;;
+
+       --build-boost)
+	    build_boost="--boost"
+            shift
+	    ;;
+
+       --build-boost-headers)
+	    build_boost_headers="--boost-headers"
+            shift
+	    ;;
+
+       --build-xercesc)
+	    build_xercesc="--xercesc"
+            shift
+	    ;;
+
+       --build-binutils)
+	    build_binutils="--binutils"
+            shift
+	    ;;
+
+       --build-dyninst)
+	    build_dyninst="--dyninst"
+            shift
+	    ;;
+
+       --build-flex)
+	    build_flex="--flex"
+            shift
+	    ;;
+
+       --build-symtabapi)
+	    build_symtabapi="--symtabapi"
+            shift
+	    ;;
+
+       --build-elfutils)
+	    build_elfutils="--elfutils"
+            shift
+	    ;;
+
+       --build-GOTCHA)
+	    build_GOTCHA="--GOTCHA"
+            shift
+	    ;;
+
+
+       --build-libelf)
+	    build_libelf="--libelf"
+            shift
+	    ;;
+
+       --build-libdwarf)
+	    build_libdwarf="--libdwarf"
+            shift
+	    ;;
+
+       --build-libmonitor)
+	    build_libmonitor="--libmonitor"
+            shift
+	    ;;
+
+       --build-libunwind)
+	    build_libunwind="--libunwind"
+            shift
+	    ;;
+
+       --build-mrnet)
+	    build_mrnet="--mrnet"
+            shift
+	    ;;
+
+       --build-papi)
+	    build_papi="--papi"
+            shift
+	    ;;
+
+       --build-python)
+	    build_python="--python"
+            shift
+	    ;;
+
+       --build-sqlite)
+	    build_sqlite="--sqlite"
+            shift
+	    ;;
+
+       --build-qt3)
+	    build_qt3="--qt3"
+            shift
+	    ;;
+
+       --build-vampirtrace)
+	    build_vampirtrace="--vampirtrace"
+            shift
+	    ;;
+
+       --runtime-target-arch)
+            test "x$2" != x || die "missing argument: $*"
+            rt_target="$2"
+            if [ ${rt_target:0:4} == "cray" ]; then
+                #echo "install-tool: rt_target:0:4=${rt_target:0:4}"
+                export KRELL_ROOT_RUNTIME_TARGET_ARCH="${rt_target}"
+                export CBTF_RUNTIME_TARGET_ARCH="${rt_target}"
+            elif [ ${rt_target:0:3} == "bgq" ]; then
+                echo "rt_target:0:3=${rt_target:0:3}"
+                export KRELL_ROOT_RUNTIME_TARGET_ARCH="${rt_target}"
+                export CBTF_RUNTIME_TARGET_ARCH="${rt_target}"
+            else 
+                echo "install-tool: EXITING, UNKNOWN RUNTIME TARGET=${rt_target}"
+                exit
+            fi
+            shift ; shift
+            ;;
+
+       --target-arch)
+            test "x$2" != x || die "missing argument: $*"
+            target="$2"
+            #echo "install-tool: --target-arch, target:0:4=${target:0:4}"
+            if [ ${target:0:3} == "mic" ]; then
+               #echo "install-tool: --target-arch, mic TARGET=${target}"
+               export KRELL_ROOT_TARGET_ARCH="${target}"
+               export CBTF_TARGET_ARCH="${target}"
+            elif [ ${target:0:3} == "arm" ]; then
+               #echo "install-tool: --target-arch, arm TARGET=${target}"
+               export KRELL_ROOT_TARGET_ARCH="${target}"
+               export CBTF_TARGET_ARCH="${target}"
+            elif [ ${target:0:4} == "cray" ]; then
+               is_cray_target=1
+               # Turn all variations of cray-x* to cray to simplify the tests in .support_for_install.sh 
+               #echo "install-tool: --target-arch, cray TARGET=${target}"
+               export KRELL_ROOT_TARGET_ARCH="cray"
+               export CBTF_TARGET_ARCH="cray"
+            elif [ ${target:0:5} == "bgqfe" ]; then
+               #echo "install-tool: --target-arch, bgqfe TARGET=${target}"
+               export CXX=g++
+               export CC=gcc
+            elif [ ${target:0:6} == "power8" ]; then
+               #echo "install-tool: --target-arch, power8 TARGET=${target}"
+               export KRELL_ROOT_TARGET_ARCH="power8"
+            elif [ ${target:0:2} == "bg" ]; then
+               #echo "install-tool: --target-arch, bg* TARGET=${target}"
+               is_bg_target=1
+               export KRELL_ROOT_TARGET_ARCH="${target}"
+               export CBTF_TARGET_ARCH="${target}"
+	       openss_runtime_only="--runtime-only"
+	       export OPENSS_RUNTIME_ONLY="--runtime-only"
+	       export KRELLROOT_RUNTIME_ONLY="--runtime-only"
+               if [ ${target:0:3} == "bgp" ]; then
+                  #echo "install-tool: --target-arch, bgp TARGET=${target}"
+                  export CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++
+                  export CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc
+               #elif [ ${target:0:5} == "bgqfe" ]; then
+                  #echo "install-tool: --target-arch, bgqfe TARGET=${target}"
+               elif [ ${target:0:3} == "bgq" ]; then
+                  #echo "install-tool: --target-arch, bgq TARGET=${target}"
+                  export CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++
+                  export CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc
+                  export KRELL_ROOT_OPENMP=/bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux/
+                  export KRELL_ROOT_STDC_PLUS_PLUS=/bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux
+                  export KRELL_ROOT_PPC64_BITMODE_64=1
+                  export KRELL_ROOT_LIBPTHREAD=/bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux
+                  export KRELL_ROOT_LIBRT=/bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux
+                  export KRELL_ROOT_PERSONALITY=/bgsys/drivers/ppcfloor/
+               fi
+               #export CBTF_TARGET_ARCH="${target}"
+               #export KRELL_ROOT_TARGET_ARCH="${target}"
+            else 
+               echo "install-tool: EXITING, --target-arch, UNKNOWN TARGET=${target}"
+               exit
+            fi
+            #echo "install-tool: EXITING, --target-arch, TARGET=${target}"
+            shift ; shift
+            ;;
+
+        --enable-bfd)
+            export KRELL_ROOT_RESOLVE_SYMBOLS="bfd"
+            shift
+            ;;
+
+        --enable-debug)
+            export OPENSS_ENABLE_DEBUG=1
+            shift
+            ;;
+
+       --target-shared)
+            export CBTF_TARGET_SHARED="1"
+            export KRELL_ROOT_TARGET_SHARED="1"
+            export OPENSS_TARGET_SHARED="1"
+            shift
+	    ;;
+
+       --exclude-oss)
+	    exclude_oss="--exclude-oss"
+            shift
+	    ;;
+
+       --force-all)
+            export OPENSS_FORCE_BINUTILS_BUILD=1
+            export KRELL_ROOT_FORCE_BINUTILS_BUILD=1
+            export OPENSS_FORCE_BOOST_BUILD=1
+            export KRELL_ROOT_FORCE_BOOST_BUILD=1
+            export KRELL_ROOT_FORCE_CMAKE_BUILD=1
+            export OPENSS_FORCE_LIBELF_BUILD=1
+            export KRELL_ROOT_FORCE_LIBELF_BUILD=1
+            export OPENSS_FORCE_LIBDWARF_BUILD=1
+            export KRELL_ROOT_FORCE_LIBDWARF_BUILD=1
+            export OPENSS_FORCE_PAPI_BUILD=1
+            export KRELL_ROOT_FORCE_PAPI_BUILD=1
+            export OPENSS_FORCE_SQLITE_BUILD=1
+            export KRELL_ROOT_FORCE_SQLITE_BUILD=1
+            export OPENSS_FORCE_QT3_BUILD=1
+            export KRELL_ROOT_FORCE_QT3_BUILD=1
+            shift
+	    ;;
+
+       --force-ptgf-build)
+            export OPENSS_FORCE_PTGF_BUILD=1
+            export KRELL_ROOT_FORCE_PTGF_BUILD=1
+            shift
+	    ;;
+
+       --force-binutils-build)
+            export OPENSS_FORCE_BINUTILS_BUILD=1
+            export KRELL_ROOT_FORCE_BINUTILS_BUILD=1
+            shift
+	    ;;
+
+       --force-boost-build)
+            export OPENSS_FORCE_BOOST_BUILD=1
+            export KRELL_ROOT_FORCE_BOOST_BUILD=1
+            shift
+	    ;;
+
+       --force-cmake-build)
+            export OPENSS_FORCE_CMAKE_BUILD=1
+            export KRELL_ROOT_FORCE_CMAKE_BUILD=1
+            shift
+	    ;;
+
+       --force-dyninst-build)
+            export OPENSS_FORCE_DYNINST_BUILD=1
+            export KRELL_ROOT_FORCE_DYNINST_BUILD=1
+            shift
+	    ;;
+
+
+       --force-libelf-build)
+            export OPENSS_FORCE_LIBELF_BUILD=1
+            export KRELL_ROOT_FORCE_LIBELF_BUILD=1
+            shift
+	    ;;
+
+       --force-libdwarf-build)
+            export OPENSS_FORCE_LIBDWARF_BUILD=1
+            export KRELL_ROOT_FORCE_LIBDWARF_BUILD=1
+            shift
+	    ;;
+
+       --force-libunwind-build)
+            export OPENSS_FORCE_LIBUNWIND_BUILD=1
+            export KRELL_ROOT_FORCE_LIBUNWIND_BUILD=1
+            shift
+	    ;;
+
+       --force-llvm-openmp-build)
+            export OPENSS_FORCE_LLVM_OPENMP_BUILD=1
+            export KRELL_ROOT_FORCE_LLVM_OPENMP_BUILD=1
+            shift
+	    ;;
+
+       --force-ompt-build)
+            export OPENSS_FORCE_OMPT_BUILD=1
+            export KRELL_ROOT_FORCE_OMPT_BUILD=1
+            shift
+	    ;;
+
+       --force-papi-build)
+            export OPENSS_FORCE_PAPI_BUILD=1
+            export KRELL_ROOT_FORCE_PAPI_BUILD=1
+            shift
+	    ;;
+
+       --force-qt3-build)
+            export OPENSS_FORCE_QT3_BUILD=1
+            export KRELL_ROOT_FORCE_QT3_BUILD=1
+            shift
+	    ;;
+
+       --force-sqlite-build)
+            export OPENSS_FORCE_SQLITE_BUILD=1
+            export KRELL_ROOT_FORCE_SQLITE_BUILD=1
+            shift
+	    ;;
+
+       --force-xercesc-build)
+            export OPENSS_FORCE_XERCESC_BUILD=1
+            export KRELL_ROOT_FORCE_XERCESC_BUILD=1
+            shift
+	    ;;
+
+
+       --skip-qt3-build)
+            export OPENSS_SKIP_QT3_BUILD=1
+            export KRELL_ROOT_SKIP_QT3_BUILD=1
+            shift
+	    ;;
+
+       --skip-binutils-build)
+            export OPENSS_SKIP_BINUTILS_BUILD=1
+            export KRELL_ROOT_SKIP_BINUTILS_BUILD=1
+            shift
+	    ;;
+
+       --skip-cmake-build)
+            export OPENSS_SKIP_CMAKE_BUILD=1
+            export KRELL_ROOT_SKIP_CMAKE_BUILD=1
+            shift
+	    ;;
+
+       --skip-papi-build)
+            export OPENSS_SKIP_PAPI_BUILD=1
+            export KRELL_ROOT_SKIP_PAPI_BUILD=1
+            shift
+	    ;;
+
+       --skip-libelf-build)
+            export OPENSS_SKIP_LIBELF_BUILD=1
+            export KRELL_ROOT_SKIP_LIBELF_BUILD=1
+            shift
+	    ;;
+
+       --skip-dyninst-build)
+            export OPENSS_SKIP_DYNINST_BUILD=1
+            export KRELL_ROOT_SKIP_DYNINST_BUILD=1
+            #echo "install-tool: KRELL_ROOT_SKIP_DYNINST_BUILD=$KRELL_ROOT_SKIP_DYNINST_BUILD"
+            shift
+	    ;;
+
+       --skip-libdwarf-build)
+            export OPENSS_SKIP_LIBDWARF_BUILD=1
+            export KRELL_ROOT_SKIP_LIBDWARF_BUILD=1
+            shift
+	    ;;
+
+       --skip-libunwind-build)
+            export OPENSS_SKIP_LIBUNWIND_BUILD=1
+            export KRELL_ROOT_SKIP_LIBUNWIND_BUILD=1
+            shift
+	    ;;
+
+       --skip-libmonitor-build)
+            export OPENSS_SKIP_LIBMONITOR_BUILD=1
+            export KRELL_ROOT_SKIP_LIBMONITOR_BUILD=1
+            shift
+	    ;;
+
+       --skip-llvm-openmp-build)
+            export OPENSS_SKIP_LLVM_OPENMP_BUILD=1
+            export KRELL_ROOT_SKIP_LLVM_OPENMP_BUILD=1
+            shift
+	    ;;
+
+       --skip-ompt-build)
+            export OPENSS_SKIP_OMPT_BUILD=1
+            export KRELL_ROOT_SKIP_OMPT_BUILD=1
+            shift
+	    ;;
+
+       --skip-sqlite-build)
+            export OPENSS_SKIP_SQLITE_BUILD=1
+            export KRELL_ROOT_SKIP_SQLITE_BUILD=1
+            shift
+	    ;;
+
+       --skip-xercesc-build)
+            export OPENSS_SKIP_XERCESC_BUILD=1
+            export KRELL_ROOT_SKIP_XERCESC_BUILD=1
+            shift
+	    ;;
+
+       --skip-mrnet-build)
+            export OPENSS_SKIP_MRNET_BUILD=1
+            export KRELL_ROOT_SKIP_MRNET_BUILD=1
+            shift
+	    ;;
+
+       --skip-symtabapi-build)
+            export OPENSS_SKIP_SYMTABAPI_BUILD=1
+            export KRELL_ROOT_SKIP_SYMTABAPI_BUILD=1
+            shift
+	    ;;
+
+       --skip-vampirtrace-build)
+            export OPENSS_SKIP_VAMPIRTRACE_BUILD=1
+            export KRELL_ROOT_SKIP_VAMPIRTRACE_BUILD=1
+            shift
+	    ;;
+
+       --skip-boost-build)
+            export OPENSS_SKIP_BOOST_BUILD=1
+            export KRELL_ROOT_SKIP_BOOST_BUILD=1
+            shift
+	    ;;
+
+       --cbtf-install-prefix | --cbtf-prefix)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || echo "install-tool: unable to find: $dir"
+	    mkdir -m 755 -p "$dir"
+	    export CBTF_PREFIX="${dir}"
+            shift ; shift
+	    ;;
+
+       --krell-root-install-prefix | --krell-root-prefix | --prefix)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || echo "install-tool: unable to find: $dir"
+	    mkdir -m 755 -p "$dir"
+	    export KRELL_ROOT_PREFIX="${dir}"
+            shift ; shift
+	    ;;
+
+       --openss-install-prefix | --openss-prefix)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || echo "unable to find: $dir"
+	    mkdir -m 755 -p "$dir"
+	    export OPENSS_PREFIX="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-runtime-dir)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_RUNTIME_DIR="${dir}"
+	    export KRELL_ROOT_RUNTIME_DIR="${dir}"
+	    export CBTF_RUNTIME_DIR="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-openss-prefix | --with-openss )
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_PREFIX="${dir}"
+	    export KRELL_ROOT_OPENSPEEDSHOP="${dir}"
+	    export OPENSS_PATH="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-cbtf)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export KRELL_ROOT_CBTF="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-cn-cbtf)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_CBTF="${dir}"
+	    export CBTF_CN_CBTF="${dir}"
+	    export KRELL_ROOT_CN_CBTF="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-cn-cbtf-krell)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_CBTF_KRELL="${dir}"
+	    export CBTF_CN_CBTF_KRELL="${dir}"
+	    export KRELL_ROOT_CN_CBTF_KRELL="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-cbtf-krell)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export KRELL_ROOT_CBTF_KRELL="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-binutils)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_BINUTILS="${dir}"
+	    export KRELL_ROOT_BINUTILS="${dir}"
+	    export CBTF_BINUTILS_ROOT="${dir}"
+            export OPENSS_SKIP_BINUTILS_BUILD=1
+            export KRELL_ROOT_SKIP_BINUTILS_BUILD=1
+            shift ; shift
+	    ;;
+
+       --with-cn-binutils)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_BINUTILS="${dir}"
+	    export CBTF_CN_BINUTILS="${dir}"
+	    export KRELL_ROOT_CN_BINUTILS="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-dyninst)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_DYNINST="${dir}"
+	    export KRELL_ROOT_DYNINST="${dir}"
+	    export CBTF_DYNINST_ROOT="${dir}"
+            export OPENSS_SKIP_DYNINST_BUILD=1
+            export KRELL_ROOT_SKIP_DYNINST_BUILD=1
+            shift ; shift
+	    ;;
+
+
+       --with-dyninst-libdir)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_DYNINST_LIB="${dir}"
+	    export KRELL_ROOT_DYNINST_LIB="${dir}"
+	    export CBTF_DYNINST_ROOT_LIB="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-cn-dyninst)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_DYNINST="${dir}"
+	    export CBTF_CN_DYNINST="${dir}"
+	    export KRELL_ROOT_CN_DYNINST="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-expat)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export KRELL_ROOT_EXPAT_ROOT="${dir}"
+	    export CBTF_EXPAT_ROOT="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-graphviz)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export KRELL_ROOT_GRAPHVIZ="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-libelf)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_LIBELF="${dir}"
+	    export KRELL_ROOT_LIBELF="${dir}"
+	    export CBTF_LIBELF_ROOT="${dir}"
+            export OPENSS_SKIP_LIBELF_BUILD=1
+            export KRELL_ROOT_SKIP_LIBELF_BUILD=1
+            shift ; shift
+	    ;;
+
+       --with-cn-libelf)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_LIBELF="${dir}"
+	    export KRELL_ROOT_CN_LIBELF="${dir}"
+	    export CBTF_CN_LIBELF="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-libdwarf)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_LIBDWARF="${dir}"
+	    export KRELL_ROOT_LIBDWARF="${dir}"
+	    export CBTF_LIBDWARF_ROOT="${dir}"
+            export OPENSS_SKIP_LIBDWARF_BUILD=1
+            export KRELL_ROOT_SKIP_LIBDWARF_BUILD=1
+            shift ; shift
+	    ;;
+
+       --with-libdwarf-libdir)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_LIBDWARF_LIB="${dir}"
+	    export KRELL_ROOT_LIBDWARF_LIB="${dir}"
+	    export CBTF_LIBDWARF_ROOT_LIB="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-cn-libdwarf)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_LIBDWARF="${dir}"
+	    export KRELL_ROOT_CN_LIBDWARF="${dir}"
+	    export CBTF_CN_LIBDWARF="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-libmonitor)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_LIBMONITOR="${dir}"
+	    export KRELL_ROOT_LIBMONITOR="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-cn-libmonitor)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_LIBMONITOR="${dir}"
+	    export CBTF_CN_LIBMONITOR="${dir}"
+	    export KRELL_ROOT_CN_LIBMONITOR="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-libunwind)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_LIBUNWIND="${dir}"
+	    export KRELL_ROOT_LIBUNWIND="${dir}"
+	    export CBTF_LIBUNWIND_ROOT="${dir}"
+            export OPENSS_SKIP_LIBUNWIND_BUILD=1
+            export KRELL_ROOT_SKIP_LIBUNWIND_BUILD=1
+            shift ; shift
+	    ;;
+
+       --with-cn-libunwind)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_LIBUNWIND="${dir}"
+	    export KRELL_ROOT_CN_LIBUNWIND="${dir}"
+	    export CBTF_CN_LIBUNWIND="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mrnet)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MRNET="${dir}"
+	    export KRELL_ROOT_MRNET="${dir}"
+	    export CBTF_MRNET_ROOT="${dir}"
+	    export MRNET_ROOT="${dir}"
+            export OPENSS_SKIP_MRNET_BUILD=1
+            export KRELL_ROOT_SKIP_MRNET_BUILD=1
+            shift ; shift
+	    ;;
+
+       --with-cn-mrnet)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_MRNET="${dir}"
+	    export CBTF_CN_MRNET="${dir}"
+	    export KRELL_ROOT_CN_MRNET="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-symtabapi)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_SYMTABAPI="${dir}"
+	    export KRELL_ROOT_SYMTABAPI="${dir}"
+	    export CBTF_SYMTABAPI_ROOT="${dir}"
+            export OPENSS_SKIP_SYMTABAPI_BUILD=1
+            export KRELL_ROOT_SKIP_SYMTABAPI_BUILD=1
+            shift ; shift
+	    ;;
+
+       --with-symtabapi-libdir)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_SYMTABAPI_LIB="${dir}"
+	    export CBTF_SYMTABAPI_ROOT_LIB="${dir}"
+	    export KRELL_ROOT_SYMTABAPI_LIB="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-cn-symtabapi)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_SYMTABAPI="${dir}"
+	    export CBTF_CN_SYMTABAPI="${dir}"
+	    export KRELL_ROOT_CN_SYMTABAPI="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-xercesc)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_XERCESC="${dir}"
+	    export KRELL_ROOT_XERCESC="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-cn-xercesc)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_XERCESC="${dir}"
+	    export KRELL_ROOT_CN_XERCESC="${dir}"
+	    export CBTF_CN_XERCESC="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-papi)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_PAPI="${dir}"
+	    export KRELL_ROOT_PAPI="${dir}"
+	    export CBTF_PAPI_ROOT="${dir}"
+            export OPENSS_SKIP_PAPI_BUILD=1
+            export KRELL_ROOT_SKIP_PAPI_BUILD=1
+            shift ; shift
+	    ;;
+
+       --with-cn-papi)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_PAPI="${dir}"
+	    export CBTF_CN_PAPI="${dir}"
+	    export KRELL_ROOT_CN_PAPI="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-boost)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_BOOST="${dir}"
+	    export CBTF_BOOST_ROOT="${dir}"
+	    export KRELL_ROOT_BOOST="${dir}"
+            export OPENSS_SKIP_BOOST_BUILD=1
+            export KRELL_ROOT_SKIP_BOOST_BUILD=1
+            shift ; shift
+	    ;;
+
+       --with-cn-boost)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_CN_BOOST="${dir}"
+	    export CBTF_CN_BOOST="${dir}"
+	    export KRELL_ROOT_CN_BOOST="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-python)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_PYTHON="${dir}"
+	    export CBTF_PYTHON_ROOT="${dir}"
+	    export KRELL_ROOT_PYTHON="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-python-vers)
+            test "x$2" != x || die "missing argument: $*"
+            vers="$2"
+            export KRELL_ROOT_PYTHON_VERS="${vers}"
+            shift ; shift
+            ;;
+
+       --with-target-python)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_TARGET_PYTHON="${dir}"
+	    export KRELL_ROOT_TARGET_PYTHON="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-qt)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export KRELL_ROOT_QT="${dir}"
+	    export QTDIR="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-qt3)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export KRELL_ROOT_QT3="${dir}"
+	    export QTDIR="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-QtGraph)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export KRELL_ROOT_QTGRAPHLIB="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-sqlite)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_SQLITE="${dir}"
+	    export KRELL_ROOT_SQLITE="${dir}"
+	    export CBTF_SQLITE_ROOT="${dir}"
+            export OPENSS_SKIP_SQLITE_BUILD=1
+            export KRELL_ROOT_SKIP_SQLITE_BUILD=1
+            shift ; shift
+	    ;;
+
+       --with-mpich)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MPICH="${dir}"
+	    export KRELL_ROOT_MPI_MPICH="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-target-mpich)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_TARGET_MPI_MPICH="${dir}"
+	    export KRELL_ROOT_TARGET_MPI_MPICH="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mpich2)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MPICH2="${dir}"
+	    export KRELL_ROOT_MPI_MPICH2="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-target-mpich2)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_TARGET_MPI_MPICH2="${dir}"
+	    export KRELL_ROOT_TARGET_MPI_MPICH2="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mpich2-driver)
+            test "x$2" != x || die "missing argument: $*"
+            driver="$2"
+            export KRELL_ROOT_MPI_MPICH2_DRIVER="${driver}"
+            shift ; shift
+            ;;
+
+       --with-mvapich)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MVAPICH="${dir}"
+	    export KRELL_ROOT_MPI_MVAPICH="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-target-mvapich)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_TARGET_MPI_MVAPICH="${dir}"
+	    export KRELL_ROOT_TARGET_MPI_MVAPICH="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mvapich2)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MVAPICH2="${dir}"
+	    export KRELL_ROOT_MPI_MVAPICH2="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-target-mvapich2)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_TARGET_MPI_MVAPICH2="${dir}"
+	    export KRELL_ROOT_TARGET_MPI_MVAPICH2="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mvapich2-driver)
+            test "x$2" != x || die "missing argument: $*"
+            driver="$2"
+            export KRELL_ROOT_MPI_MVAPICH2_DRIVER="${driver}"
+            shift ; shift
+            ;;
+
+       --with-openmpi)
+	    test "x$2" != x || die "missing argument: $*" 
+            case "$2" in 
+                /* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_OPENMPI="${dir}"
+	    export KRELL_ROOT_MPI_OPENMPI="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-target-openmpi)
+	    test "x$2" != x || die "missing argument: $*" 
+            case "$2" in 
+                /* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_TARGET_MPI_OPENMPI="${dir}"
+	    export KRELL_ROOT_TARGET_MPI_OPENMPI="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-mpt)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_MPI_MPT="${dir}"
+	    export KRELL_ROOT_MPI_MPT="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-target-mpt)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_TARGET_MPI_MPT="${dir}"
+	    export KRELL_ROOT_TARGET_MPI_MPT="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-ptgf)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export KRELL_ROOT_PTGF_ROOT="${dir}"
+            shift ; shift
+            ;;
+
+       --with-ompt)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export CBTF_LIBIOMP_ROOT="${dir}"
+            export KRELL_ROOT_OMPT_ROOT="${dir}"
+            shift ; shift
+            ;;
+
+       --with-llvm-openmp)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export CBTF_LIBIOMP_ROOT="${dir}"
+            export KRELL_ROOT_OMPT_ROOT="${dir}"
+            shift ; shift
+            ;;
+
+       --with-vt)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_VAMPIRTRACE="${dir}"
+	    export KRELL_ROOT_VAMPIRTRACE="${dir}"
+            shift ; shift
+	    ;;
+
+       --with-otf)
+	    test "x$2" != x || die "missing argument: $*"
+	    case "$2" in
+		/* )  dir="$2" ;;
+		* )   dir="`pwd`/$2" ;;
+	    esac
+	    test -d "$dir" || die "unable to find: $dir"
+	    export OPENSS_OTF="${dir}"
+	    export KRELL_ROOT_OTF="${dir}"
+            shift ; shift
+	    ;;
+
+        -- )
+            shift
+            break
+            ;;
+
+        -* )
+            die "unknown option: $1"
+            ;;
+
+        * )
+            break
+            ;;
+    esac
+done
+
+
+#echo install-tool: bottom of main loop, KRELL_ROOT_TARGET_ARCH=$KRELL_ROOT_TARGET_ARCH
+#echo install-tool: bottom of main loop, target_arch=$target_arch
+#echo install-tool: bottom of main loop, is_cray_target=$is_cray_target
+#echo install-tool: bottom of main loop, is_bg_target=$is_bg_target
+
+if [ -z $KRELL_ROOT_TARGET_ARCH ] || [ $is_cray_target == 1 ] || [ $is_bg_target == 1 ]  ; then
+
+  if [ "${is_bg_target}" = 1 ]; then
+     if [ $KRELL_ROOT_MPI_MPICH2 ]; then
+        export KRELL_ROOT_TARGET_MPI_MPICH2=$KRELL_ROOT_MPI_MPICH2
+     fi
+  fi
+
+  if [ -e /bgsys/drivers/ppcfloor/../ppc64 ] && [ -z $KRELL_ROOT_TARGET_ARCH ]; then
+     #echo install-tool: inside is bgqfe if clause, KRELL_ROOT_TARGET_ARCH=$KRELL_ROOT_TARGET_ARCH
+     target_arch="--target-arch bgqfe"
+     unset KRELL_ROOT_TARGET_ARCH
+  elif [ "${is_cray_target}" = 1 ] || [ "${is_bg_target}" = 1 ] ; then
+     target_arch="--target-arch $KRELL_ROOT_TARGET_ARCH"
+     #echo install-tool: inside is cray, is bg, elif clause, is_cray_target=$is_cray_target
+     #unset KRELL_ROOT_TARGET_ARCH
+  else
+     #echo install-tool: inside else clause, KRELL_ROOT_TARGET_ARCH=$KRELL_ROOT_TARGET_ARCH
+     target_arch=""
+  fi
+
+  if [ "$build_autotools" == "--devel" ]; then
+
+    ./.support_for_install.sh $build_autotools
+
+  elif [ "$build_bison" == "--bison" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_bison
+
+  elif [ "$build_flex" == "--flex" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_flex
+
+
+  elif [ "$build_cmake" == "--build-cmake" ]; then
+
+    ./.support_for_install.sh $build_cmake
+
+  elif [ "$build_expat" == "--build-expat" ]; then
+
+    ./.support_for_install.sh $build_expat
+
+  elif [ "$build_zlib" == "--build-zlib" ]; then
+
+    ./.support_for_install.sh $build_zlib
+
+  elif [ "$build_ptgfall" == "--build-ptgfall" ]; then
+
+    ./.support_for_install.sh $build_ptgfall
+
+  elif [ "$build_ptgf" == "--build-ptgf" ]; then
+
+    ./.support_for_install.sh $build_ptgf
+
+  elif [ "$build_ptgfossgui" == "--build-ptgfossgui" ]; then
+
+    ./.support_for_install.sh $build_ptgfossgui
+
+  elif [ "$build_qcustomplot" == "--build-qcustomplot" ]; then
+
+    ./.support_for_install.sh $build_qcustomplot
+
+  elif [ "$build_graphviz" == "--build-graphviz" ]; then
+
+    ./.support_for_install.sh $build_graphviz
+
+  elif [ "$build_QtGraph" == "--build-QtGraph" ]; then
+
+    ./.support_for_install.sh $build_QtGraph
+
+  elif [ "$build_ompt" == "--build-ompt" ]; then
+
+    ./.support_for_install.sh $build_ompt
+
+  elif [ "$build_llvm_openmp" == "--build-llvm-openmp" ]; then
+
+    ./.support_for_install.sh $build_llvm_openmp
+
+  elif [ "$build_xercesc" == "--xercesc" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_xercesc 
+
+  elif [ "$build_boost" == "--boost" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_boost 
+
+  elif [ "$build_boost_headers" == "--boost-headers" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_boost_headers 
+
+  elif [ "$build_binutils" == "--binutils" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_binutils 
+
+  elif [ "$build_bison" == "--bison" ]; then
+
+    ./.support_for_install.sh $build_compiler $no_rpm $build_bison 
+
+  elif [ "$build_flex" == "--flex" ]; then
+
+    ./.support_for_install.sh $build_compiler $no_rpm $build_flex 
+
+  elif [ "$build_elfutils" == "--elfutils" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_elfutils
+
+  elif [ "$build_GOTCHA" == "--GOTCHA" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_GOTCHA
+
+  elif [ "$build_libelf" == "--libelf" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_libelf
+
+  elif [ "$build_libdwarf" == "--libdwarf" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_libdwarf 
+
+  elif [ "$build_libmonitor" == "--libmonitor" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_libmonitor
+
+  elif [ "$build_libunwind" == "--libunwind" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_libunwind 
+
+  elif [ "$build_mrnet" == "--mrnet" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $no_alps $build_mrnet
+
+  elif [ "$build_vampirtrace" == "--vampirtrace" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_vampirtrace
+
+  elif [ "$build_papi" == "--papi" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_papi
+
+  elif [ "$build_python" == "--python" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_python
+
+  elif [ "$build_sqlite" == "--sqlite" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_sqlite
+
+  elif [ "$build_qt3" == "--qt3" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_qt3
+
+  elif [ "$build_cbtf" == "--cbtf" ]; then
+
+    #echo "Calling for build-cbtf with target_arch=$target_arch"
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_cbtf $target_arch
+
+  elif [ "$build_cbtf_all" == "--cbtf-all" ]; then
+
+    #echo "install-tool: Calling for build-cbtf-all NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtf_all 
+
+  elif [ "$build_cbtf_krell" == "--cbtf-krell" ]; then
+
+    #echo "install-tool: Calling for build-cbtf-krell NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtf_krell 
+
+  elif [ "$build_cbtf_argonavis" == "--cbtf-argonavis" ]; then
+
+    #echo "install-tool: Calling for build-cbtf-argonavis NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtf_argonavis 
+
+  elif [ "$build_cbtfargonavisgui" == "--cbtfargonavisgui" ]; then
+
+    #echo "install-tool: Calling for build-cbtf-argonavis NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtfargonavisgui 
+
+  elif [ "$build_cbtf_lanl" == "--cbtf-lanl" ]; then
+
+    #echo "install-tool: Calling for build-cbtf-lanl NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtf_lanl 
+
+  elif [ "$build_dyninst" == "--dyninst" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_dyninst
+
+  elif [ "$build_symtabapi" == "--symtabapi" ]; then
+
+    ./.support_for_install.sh $create_rpm $build_compiler $no_rpm $build_symtabapi
+
+  elif [ "$build_onlyossoffline" == "--onlyossoffline" ]; then
+
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only $target_arch $create_rpm $build_compiler $no_rpm --with-option 9
+
+  elif [ "$build_all" == "--build-all" ]; then
+
+     # if the krell root is not set, ask for it to be provided and exit
+     if [ -z $KRELL_ROOT_PREFIX ]; then
+        echo "install-tool: KRELL_ROOT_PREFIX not set, please provide --krell-root-prefix clause."
+        exit 
+     else 
+       # if the root is set, and the option is build-all then build the root and return for more checks: cbtf, oss
+       export OPENSS_INSTRUMENTOR="krellroot"
+       export OPENSS_BUILD_TASK="krellroot"
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only $target_arch $create_rpm $build_compiler $no_rpm --with-option 9
+     fi
+
+     # if the cbtf root is not set, ask for it to be provided and exit
+     if [ -z $CBTF_PREFIX ]; then
+        echo "install-tool: CBTF_PREFIX not set, please provide --cbtf-prefix clause."
+        exit 
+     else 
+       # if the cbtf root is set, and the option is build-all then build cbtf and return for more checks: oss
+       export OPENSS_INSTRUMENTOR="cbtf"
+       export OPENSS_BUILD_TASK="cbtf"
+       ./.support_for_install.sh  $exclude_oss $openss_gui_only $openss_runtime_only $target_arch $create_rpm $build_compiler $no_rpm --with-option 9
+     fi
+
+     # if the openss prefix is not set, ask for it to be provided and exit
+     if [ -z $OPENSS_PREFIX ]; then
+        echo "install-tool: OPENSS_PREFIX not set, please provide --openss-prefix clause."
+        exit 
+     else 
+       # if the openss prefix is set, and the option is build-all then build oss
+       export OPENSS_INSTRUMENTOR="cbtf"
+       export OPENSS_BUILD_TASK="onlyosscbtf"
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only $target_arch $create_rpm $build_compiler $no_rpm --with-option 9
+     fi
+
+  elif [ "$build_offline_check" == "--build-offline" ]; then
+
+     if [ -z $KRELL_ROOT_PREFIX ]; then
+       export KRELL_ROOT_PREFIX=$OPENSS_PREFIX
+       export OPENSS_INSTRUMENTOR="offline"
+       export OPENSS_BUILD_TASK="offline"
+       ./.support_for_install.sh  $exclude_oss $openss_gui_only $openss_runtime_only $target_arch $create_rpm $build_compiler $no_rpm --with-option 9
+     else 
+       export OPENSS_INSTRUMENTOR="offline"
+       export OPENSS_BUILD_TASK="onlyossoffline"
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only $target_arch $create_rpm $build_compiler $no_rpm --with-option 9
+     fi
+
+  elif [ "$build_online_check" == "--build-online" ]; then
+
+     if [ -z $KRELL_ROOT_PREFIX ]; then
+       export KRELL_ROOT_PREFIX=$OPENSS_PREFIX
+       export OPENSS_INSTRUMENTOR="mrnet"
+       export OPENSS_BUILD_TASK="mrnet"
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only $target_arch $create_rpm $build_compiler $no_rpm $no_alps --with-option 9
+     else 
+       export OPENSS_INSTRUMENTOR="mrnet"
+       export OPENSS_BUILD_TASK="onlyossonline"
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only $target_arch $create_rpm $build_compiler $no_rpm $no_alps --with-option 9
+     fi
+
+  else
+    # default fall through build offline 
+    if [ -z $OPENSS_PREFIX ] && [ -z $OPENSS_INSTRUMENTOR ] && [ -z $OPENSS_BUILD_TASK ] ; then
+      export OPENSS_PREFIX=$DEFAULT_OPENSS
+      export OPENSS_INSTRUMENTOR="offline"
+      export OPENSS_BUILD_TASK="offline"
+    fi
+    ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only $target_arch $create_rpm $build_compiler $no_rpm --with-option 9
+
+  fi
+
+else
+
+  #echo "install-tool: Target architecture support."
+  #echo "install-tool: In target architecture support, KRELL_ROOT_TARGET_ARCH=$KRELL_ROOT_TARGET_ARCH"
+
+  if [ "$build_autotools" == "--devel" ]; then
+
+    ./.support_for_install.sh $build_autotools
+
+  elif [ "$build_xercesc" == "--xercesc" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_xercesc 
+    ./.support_for_install.sh $build_compiler $no_rpm $build_xercesc 
+
+  elif [ "$build_boost" == "--boost" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_boost 
+    ./.support_for_install.sh $build_compiler $no_rpm $build_boost 
+
+  elif [ "$build_binutils" == "--binutils" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_binutils 
+    ./.support_for_install.sh $build_compiler $no_rpm $build_binutils 
+
+  elif [ "$build_elfutils" == "--elfutils" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_elfutils
+    ./.support_for_install.sh $build_compiler $no_rpm $build_elfutils
+
+  elif [ "$build_GOTCHA" == "--GOTCHA" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_GOTCHA
+    ./.support_for_install.sh $build_compiler $no_rpm $build_GOTCHA
+
+  elif [ "$build_libelf" == "--libelf" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_libelf
+    ./.support_for_install.sh $build_compiler $no_rpm $build_libelf
+
+  elif [ "$build_libdwarf" == "--libdwarf" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_libdwarf 
+    ./.support_for_install.sh $build_compiler $no_rpm $build_libdwarf 
+
+  elif [ "$build_libmonitor" == "--libmonitor" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_libunwind 
+    ./.support_for_install.sh $build_compiler $no_rpm $build_libunwind 
+
+  elif [ "$build_libunwind" == "--libunwind" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_libmonitor
+    ./.support_for_install.sh $build_compiler $no_rpm $build_libmonitor
+
+  elif [ "$build_mrnet" == "--mrnet" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_mrnet
+    ./.support_for_install.sh $build_compiler $no_rpm $no_alps $build_mrnet
+
+  elif [ "$build_papi" == "--papi" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_papi
+    ./.support_for_install.sh $build_compiler $no_rpm $build_papi
+
+  elif [ "$build_cbtf" == "--cbtf" ]; then
+
+    #echo "install-tool: Calling for build-cbtf NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtf 
+
+  elif [ "$build_cbtf_all" == "--cbtf-all" ]; then
+
+    #echo "install-tool: Calling for build-cbtf-all NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtf_all 
+
+  elif [ "$build_cbtf_krell" == "--cbtf-krell" ]; then
+
+    #echo "install-tool: Calling for build-cbtf-krell NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtf_krell 
+
+  elif [ "$build_cbtf_argonavis" == "--cbtf-argonavis" ]; then
+
+    #echo "install-tool: Calling for build-cbtf-argonavis NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtf_argonavis 
+
+  elif [ "$build_cbtf_lanl" == "--cbtf-lanl" ]; then
+
+    #echo "install-tool: Calling for build-cbtf-lanl NON-TARGET"
+    ./.support_for_install.sh $build_compiler $no_rpm $build_cbtf_lanl 
+
+  elif [ "$build_onlyosscbtf" == "--onlyosscbtf" ]; then
+
+    #echo "install-tool: Calling for --onlyosscbtf TARGET"
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_onlyosscbtf 
+    ./.support_for_install.sh $target_arch $build_compiler $no_rpm --with-option 9
+
+  elif [ "$build_dyninst" == "--dyninst" ]; then
+
+    #./.support_for_target_install.sh $build_compiler $no_rpm $build_dyninst
+    ./.support_for_install.sh $build_compiler $no_rpm $build_dyninst
+
+  elif [ "$build_onlyossoffline" == "--onlyossoffline" ]; then
+
+    #./.support_for_target_install.sh $openss_gui_only $openss_runtime_only $build_onlyossoffline
+    ./.support_for_install.sh $openss_gui_only $openss_runtime_only $build_onlyossoffline
+
+  elif [ "$build_all" == "--build-all" ]; then
+
+    # if the krell root is not set, ask for it to be provided and exit
+    if [ -z $KRELL_ROOT_PREFIX ]; then
+        echo "install-tool: KRELL_ROOT_PREFIX not set, please provide --krell-root-prefix clause."
+        exit 
+    else 
+       # if the root is set, and the option is build-all then build the root and return for more checks: cbtf, oss
+       export OPENSS_INSTRUMENTOR="krellroot"
+       export OPENSS_BUILD_TASK="krellroot"
+       #./.support_for_target_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+    fi
+
+     # if the cbtf prefix is not set, ask for it to be provided and exit
+     if [ -z $CBTF_PREFIX ]; then
+        echo "install-tool: CBTF_PREFIX not set, please provide --cbtf-prefix clause."
+        exit 
+     else 
+       # if the cbtf root is set, and the option is build-all then build cbtf and return for more checks: oss
+       export OPENSS_INSTRUMENTOR="cbtf"
+       export OPENSS_BUILD_TASK="cbtf"
+       #./.support_for_target_install.sh  $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+       ./.support_for_install.sh  $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+     fi
+
+     # if the openss prefix is not set, ask for it to be provided and exit
+     if [ -z $OPENSS_PREFIX ]; then
+        echo "install-tool: OPENSS_PREFIX not set, please provide --openss-prefix clause."
+        exit 
+     else 
+       # if the openss prefix is set, and the option is build-all then build oss
+       export OPENSS_INSTRUMENTOR="cbtf"
+       export OPENSS_BUILD_TASK="onlyosscbtf"
+       #./.support_for_target_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+     fi
+
+  elif [ "$build_offline_check" == "--build-offline" ]; then
+
+     # if krell root is not specified then build offline components into the same directory as OSS
+     if [ -z $KRELL_ROOT_PREFIX ]; then
+       export KRELL_ROOT_PREFIX=$OPENSS_PREFIX
+       export OPENSS_INSTRUMENTOR="offline"
+       export OPENSS_BUILD_TASK="offline"
+       #./.support_for_target_install.sh  $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+       ./.support_for_install.sh  $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+
+     else 
+
+       # if krell root is specified then build only OSS using the krell root
+       export OPENSS_INSTRUMENTOR="offline"
+       export OPENSS_BUILD_TASK="onlyossoffline"
+       #./.support_for_target_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+     fi
+
+  elif [ "$build_online_check" == "--build-online" ]; then
+
+     # if krell root is not specified then build online components into the same directory as OSS
+     if [ -z $KRELL_ROOT_PREFIX ]; then
+       export KRELL_ROOT_PREFIX=$OPENSS_PREFIX
+       export OPENSS_INSTRUMENTOR="mrnet"
+       export OPENSS_BUILD_TASK="mrnet"
+       #./.support_for_target_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only $no_alps --with-option 9
+
+     else 
+
+       # if krell root is specified then build only OSS using the krell root
+       export OPENSS_INSTRUMENTOR="mrnet"
+       export OPENSS_BUILD_TASK="onlyossonline"
+       #./.support_for_target_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+       ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only $no_alps --with-option 9
+
+     fi
+
+  else
+
+    # default fall through
+    #./.support_for_target_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+    ./.support_for_install.sh $exclude_oss $openss_gui_only $openss_runtime_only --with-option 9
+
+  fi
+
+fi
+
+

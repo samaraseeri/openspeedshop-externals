@@ -1,0 +1,170 @@
+
+NOTE 1: Here are commands to help in examining the 
+        openspeedshop database file with sqlite:
+
+sqlite3  name of openss data file
+sqlite3 prompt:  .schema   (shows layout of database)
+
+select name from functions;   (shows all function symbols)
+select count(*) from data;    (should be > 0 for valid data)
+select path from files;       (shows all files in database)
+select pid from threads;
+select mpi_rank from threads;
+select posix_tid from threads;
+select host from threads;
+select command from threads;
+
+# accessing counts inside a table
+select view_cmd from Views;
+select view_data from Views;
+select view_data from Views WHERE view_cmd = "expview"
+
+sqlite> select count (view_data) from Views;
+0
+sqlite> select count (view_cmd) from Views;
+1
+
+
+an so on an so forth...
+
+
+
+# The order here corresponds to the thread list (example -np4 mpi job)
+sqlite> select pid from threads;
+2159  (thread 1)  mpirun 
+2188  (thread 2)
+2186  (thread 3)
+2185  (thread 4)
+2187  (thread 5)
+
+# Five blobs were sent
+select count(*) from data;
+5
+
+NOTE 2: How to create an Open|SpeedShop patch
+
+at the top-level directory do this command:
+cvs diff -uN > myOSS.patch
+
+
+How to use the patch
+at the top-level directory do this command:
+patch -p0 < myOSS.patch
+
+
+
+
+NOTE 3: TEST FOR FILE LOCKING TO SEE IF SQLITE CAN CREATE A DATABASE FILE
+
+cd <directory in file system being checked>
+sqlite3 junkfile 
+create table JUNK (version integer);
+insert into JUNK (version) values(1); 
+cntl-D
+
+
+NOTE 4: HOW TO BOOTSTRAP:
+
+If autotools not built then cd OpenSpeedShop_ROOT
+export OPENSS_AUTOTOOLS_ROOT=<autotools_path>
+./install.sh --devel
+# adjust module for autotools
+
+module load autotools-2.2.6b
+./bootstrap
+module unload autotools-2.2.6b
+
+
+
+NOTE 5: HOW TO BUILD CBTF INSTRUMENTOR VERSION: (example configure)
+# shows where the expected components could/should come from (root, boost, cbtf are main categories)
+./configure --prefix=/users/jeg/todi/cbtf_oss --with-instrumentor=cbtf --enable-resolve-symbols=symtabapi --with-symtabapi=/users/jeg/todi/krell_root --with-mrnet=/users/jeg/todi/krell_root     --with-mrnet-version=4.0.0 --with-dyninst=/users/jeg/todi/krell_root --with-dyninst-version=8.0.0 --with-libdwarf=/users/jeg/todi/krell_root --with-libmonitor=/users/jeg/todi/krell_root     --with-libxerces-c-prefix=/users/jeg/todi/krell_root --with-cbtf=/users/jeg/todi/cbtf_proper_shared --with-cbtf-xml=/users/jeg/todi/cbtf_proper_shared --with-cbtf-mrnet=/users/jeg/todi/cbtf_proper_shared --with-cbtf-messages=/users/jeg/todi/cbtf_proper_shared --with-cbtf-services=/users/jeg/todi/cbtf_proper_shared --with-boost=/apps/todi/boost/1.50sn/gnu_434 --with-boost-libdir=/apps/todi/boost/1.50sn/gnu_434/lib --with-sqlite=/users/jeg/todi/krell_root
+
+
+NOTE 6: HOW to cvs tag the release: (11-15-13 jeg)
+
+cvs tag openspeedshop_21
+
+NOTE 7: Finding undefined symbols in openss
+
+export LD_DEBUG=libs
+openss -cli
+
+strace openss -cli
+
+NOTE 8: Finding if library is compiled without -fPIC
+
+> for i in /usr/lib/*.a /usr/local/lib/*.a; do
+> objdump --reloc $i 2>/dev/null | grep R_X86_64_32S > /dev/null && echo $i;
+> done
+>
+objdump --reloc <library name> 2>/dev/null | grep R_X86_64_32S > /dev/null 
+like:
+objdump --reloc /usr/lib64/libiberty.a 2>/dev/null | grep R_X86_64_32S > /dev/null 
+
+
+
+NOTE 9: cluster analysis in the CLI:
+
+openss>>cviewcluster  # optionally add: -vlinkedobjects or other qualifiers
+2
+3
+openss>>cview -c 2,3 -mthreadaverage 
+
+
+NOTE 10: Using valgrind for finding memory bugs:
+
+valgrind --trace-children=yes --log-file=mylog.txt --tool=memcheck --leak-check=yes openss -cli -f smg2000-usertime-1.openss
+
+
+
+NOTE 11:  fPIC determination:
+
+jeg@jeg-OptiPlex-GX620:~/OpenSpeedShop_ROOT$ objdump --reloc /usr/lib/libiberty_pic.a 2>/dev/null | grep R_X86_64_32S
+jeg@jeg-OptiPlex-GX620:~/OpenSpeedShop_ROOT$ objdump --reloc /usr/lib/libiberty.a 2>/dev/null | grep R_X86_64_32S
+00000000000000f5 R_X86_64_32S      .rodata
+00000000000004b4 R_X86_64_32S      .rodata+0x00000000000000f0
+000000000000071a R_X86_64_32S      .bss+0x0000000000000080
+000000000000074f R_X86_64_32S      .bss+0x0000000000000080
+
+NOTE 12: Getting the devel branches for the new gui and spack:
+
+a) PTGF related GUI source git devel branch checkout information
+  git clone https://github.com/PTGF/PTGF ptgf
+  pushd ptgf
+  git checkout --track -b devel origin/devel
+  git pull
+  popd
+  git clone https://github.com/PTGF/QCustomPlot qcustomplot
+  pushd qcustomplot
+  git checkout --track -b devel origin/devel
+  popd
+  git clone https://github.com/OpenSpeedShop/gui openss
+  pushd openss
+  git checkout --track -b devel origin/devel
+  popd
+
+b) SPACK - devel branch
+
+  git clone https://github.com/scalability-llnl/spack.git
+  git checkout -t origin/develop
+
+c) Test for the active branch
+  git branch -a
+
+NOTE 13: You can obtain the newest version of config.guess and config.sub 
+         from the ‘config’ project at http://savannah.gnu.org/. The commands to fetch them are
+
+$ wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'
+$ wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'
+
+NOTE 14: Finding the format of a binary/executable:
+
+bint01 448% objdump -af nbody.mic2
+
+nbody.mic2:     file format elf64-little
+nbody.mic2
+architecture: UNKNOWN!, flags 0x00000112:
+EXEC_P, HAS_SYMS, D_PAGED
+start address 0x0000000000401310
+

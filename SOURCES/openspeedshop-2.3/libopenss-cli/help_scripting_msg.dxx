@@ -1,0 +1,443 @@
+/*/*******************************************************************************
+** Copyright (c) 2005 Silicon Graphics, Inc. All Rights Reserved.
+** Copyright (c) 2007 Krell Institute  All Rights Reserved.
+**
+** This library is free software; you can redistribute it and/or modify it under
+** the terms of the GNU Lesser General Public License as published by the Free
+** Software Foundation; either version 2.1 of the License, or (at your option)
+** any later version.
+**
+** This library is distributed in the hope that it will be useful, but WITHOUT
+** ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+** FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+** details.
+**
+** You should have received a copy of the GNU Lesser General Public License
+** along with this library; if not, write to the Free Software Foundation, Inc.,
+** 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*******************************************************************************/
+
+/** @file
+ *
+ * Message database.
+ *
+ */
+
+/*********************************************/
+// COMMAND ARGUMENTS
+/*********************************************/
+const char *script_expAttach_args[] = {
+    "expAttach(*arglist)"
+    "    arglist - up to 4 optional class objects:"
+    "",
+    "        * ModifierList object with \"mpi\"",
+    "        * ExpId object",
+    "        * Target object lists",
+    "              o ClusterList",
+    "              o FileList",
+    "              o HostList",
+    "              o PidList",
+    "              o TreadList",
+    "              o RankList",
+    "        * ExpTypeList"
+};
+
+
+const char *script_expClose_args[] = {
+    "expClose(*arglist)",
+    "    arglist - up to 2 optional class objects:",
+    "",
+    "        * ModifierList object with \"kill\"",
+    "        * ExpId object or ModifierList object with \"all\""
+};
+
+const char *script_expCont_args[] = {
+    "expCont(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - 1 of 2 optional class objects:",
+    " ",
+    "            * ModifierList(\"all\")",
+    "            * ExpId"
+};
+
+const char *script_expCreate_args[] = {
+    "ExpId = expCreate(arglist)",
+    "    arglist - up to 3 optional class objects:",
+    " ",
+    "        * ModifierList object with \"mpi\"",
+    "        * Target object lists",
+    "              o ClusterList",
+    "              o FileList",
+    "              o HostList",
+    "              o PidList",
+    "              o TreadList",
+    "              o RankList",
+    "        * ExpTypeList"
+};
+
+
+
+const char *script_expDetach_args[] = {
+    "expDetach(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - up to 3 optional class objects:",
+    " ",
+    "            * ExpId object",
+    "            * Target object lists",
+    "                  o ClusterList",
+    "                  o HostList",
+    "                  o PidList",
+    "                  o TreadList",
+    "                  o RankList",
+    "            * ExpTypeList"
+};
+
+const char *script_expDisable_args[] = {
+    "expDisable(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - 1 of 2 optional class objects:",
+    " ",
+    "            * ModifierList(\"all\")",
+    "            * ExpId"
+};
+
+const char *script_expEnable_args[] = {
+    "expEnable(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - 1 of 2 optional class objects:",
+    " ",
+    "            * ModifierList(\"all\")",
+    "            * ExpId"
+};
+
+const char *script_expFocus_args[] = {
+    "<expId> = expFocus(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - 1 optional class object:",
+    " ",
+    "            * ExpId"
+};
+
+const char *script_expGo_args[] = {
+    "expGo(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - 1 of 2 optional class objects:",
+    " ",
+    "            * ModifierList(\"all\")",
+    "            * ExpId"
+};
+
+const char *script_expPause_args[] = {
+    "expPause(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - 1 of 2 optional class objects:",
+    " ",
+    "            * ModifierList(\"all\")",
+    "            * ExpId"
+};
+
+const char *script_expRestore_args[] = {
+    "<expId> = expRestore(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - 1 class object:",
+    " ",
+    "            * FileList"
+};
+
+const char *script_expSave_args[] = {
+    "expSave(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - From 1 to 3 class objects:",
+    " ",
+    "            * ModifierList(\"copy\") (optional)",
+    "            * ExpId (optional)",
+    "            * FileList (required)"
+};
+
+const char *script_expSetArgs_args[] = {
+    "expSetArgs(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - From 1 to 2 class objects:",
+    " ",
+    "            * ExpId (optional)",
+    "            * Arguments (required)",
+};
+
+const char *script_expSetParam_args[] = {
+    "expSetParam(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - From 1 to 2 class objects:",
+    " ",
+    "            * ExpId (optional)",
+    "            * ParamList (required)",
+};
+
+const char *script_expView_args[] = {
+    "expView(*arglist)",
+    " ",
+    "    Parameters:",
+    "        arglist - up to 4 optional class objects:",
+    " ",
+    "            * ExpId object",
+    "            * ViewType",
+    "            * MetricList",
+    "            * Target object lists",
+    "                  o ClusterList",
+    "                  o FileList",
+    "                  o HostList",
+    "                  o PidList",
+    "                  o TreadList",
+    "                  o RankList"
+};
+
+const char *script_list_args[] = {
+    "<ListObject> = expView(*arglist)",
+    "",
+    "	The type of list returned and the specific",
+    "	arglist depends on the type requested. See",
+    "	the openss API webpage for list or in python,",
+    "	use help(openss.list)."
+};
+
+const char *script_clearBreak_args[] = {
+    "clearBreak <breakId>",
+    "NOT SUPPORTED YET"
+};
+
+const char *script_exit_args[] = {
+    "exit",
+    "",
+    "    Parameters: None"
+
+};
+
+const char *script_setBreak_args[] = {
+    " <breakId> = setBreak [ ExpId ] [ <target> ] <address_description>",
+    "NOT SUPPORTED YET"
+};
+
+/*********************************************/
+// SCRIPTING COMMAND MESSAGE ARRAY
+/*********************************************/
+// message array to be passed to message czar
+OpenSpeedShop::message_element_t script_msg[] = {
+
+//    CMD_HEAD_ERROR,
+    -1,     	//  Index for error messages
+    NULL,   	//  Keyword
+    NULL,0, 	//  Related keyword list
+    NULL,   	//  Topic
+    NULL,	//  Brief string
+    NULL,0, 	//  Normal description list of strings
+    NULL,0, 	//  Detailed description list of strings
+    NULL,0, 	//  Example list
+    NULL,0, 	//  Argument list
+
+//    CMD_EXP_ATTACH,
+    -1,cmd_desc[CMD_EXP_ATTACH].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expAttach_args,sizeof(script_expAttach_args)/sizeof(char **),
+
+//    CMD_EXP_CLOSE,
+    -1,cmd_desc[CMD_EXP_CLOSE].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expClose_args,sizeof(script_expClose_args)/sizeof(char **),
+
+//    CMD_EXP_CONT,
+    -1,cmd_desc[CMD_EXP_CONT].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expCont_args,sizeof(script_expCont_args)/sizeof(char **),
+
+//    CMD_EXP_CREATE,
+    -1,cmd_desc[CMD_EXP_CREATE].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expCreate_args,sizeof(script_expCreate_args)/sizeof(char **),
+
+//    CMD_EXP_DETACH,
+    -1,cmd_desc[CMD_EXP_DETACH].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expDetach_args,sizeof(script_expDetach_args)/sizeof(char **),
+
+//    CMD_EXP_DISABLE,
+    -1,cmd_desc[CMD_EXP_DISABLE].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expDisable_args,sizeof(script_expDisable_args)/sizeof(char **),
+
+//    CMD_EXP_ENABLE,
+    -1,cmd_desc[CMD_EXP_ENABLE].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expEnable_args,sizeof(script_expEnable_args)/sizeof(char **),
+
+//    CMD_EXP_FOCUS,
+    -1,cmd_desc[CMD_EXP_FOCUS].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expFocus_args,sizeof(script_expFocus_args)/sizeof(char **),
+
+//    CMD_EXP_GO,
+    -1,cmd_desc[CMD_EXP_GO].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expGo_args,sizeof(script_expGo_args)/sizeof(char **),
+
+//    CMD_EXP_PAUSE,
+    -1,cmd_desc[CMD_EXP_PAUSE].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expPause_args,sizeof(script_expPause_args)/sizeof(char **),
+
+
+//    CMD_EXP_RESTORE,
+    -1,cmd_desc[CMD_EXP_RESTORE].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expRestore_args,sizeof(script_expRestore_args)/sizeof(char **),
+
+//    CMD_EXP_SAVE,
+    -1,cmd_desc[CMD_EXP_SAVE].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expSave_args,sizeof(script_expSave_args)/sizeof(char **),
+
+//    CMD_EXP_SETARGS,
+    -1,cmd_desc[CMD_EXP_SETARGS].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expSetArgs_args,sizeof(script_expSetArgs_args)/sizeof(char **),
+
+//    CMD_EXP_SETPARAM,
+    -1,cmd_desc[CMD_EXP_SETPARAM].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expSetParam_args,sizeof(script_expSetParam_args)/sizeof(char **),
+
+//    CMD_EXP_VIEW,
+    -1,cmd_desc[CMD_EXP_VIEW].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_expView_args,sizeof(script_expView_args)/sizeof(char **),
+
+//    CMD_LIST,
+    -1,cmd_desc[CMD_LIST_GENERIC].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_list_args,sizeof(script_list_args)/sizeof(char **),
+
+//    CMD_CLEAR_BREAK,
+    -1,cmd_desc[CMD_CLEAR_BREAK].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_clearBreak_args,sizeof(script_clearBreak_args)/sizeof(char **),
+
+//    CMD_EXIT,
+    -1,cmd_desc[CMD_EXIT].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_exit_args,sizeof(script_exit_args)/sizeof(char **),
+
+//    CMD_SETBREAK,
+    -1,cmd_desc[CMD_SETBREAK].name,
+    NULL,0,
+    "scripting",
+    NULL,
+    NULL,0,
+    NULL,0,
+    NULL,0,
+    script_setBreak_args,sizeof(script_setBreak_args)/sizeof(char **),
+
+//    END OF LIST
+    -1,NULL,NULL,0,NULL,NULL,
+    NULL,0,NULL,0,NULL,0,NULL,0
+
+};
+

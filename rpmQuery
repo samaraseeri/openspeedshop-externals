@@ -1,0 +1,77 @@
+#!/bin/bash
+
+if [ -f /usr/bin/dpkg ]; then
+  echo "    NOTE: looking for packages using dpkg"
+  found_dpkg=1
+  command="dpkg -l "
+else
+  echo "    NOTE: looking for packages using rpm"
+  found_dpkg=0
+  command="rpm --query --all "
+fi
+
+################################################################################
+# Query for Open|SpeedShop required/desired packages
+################################################################################
+echo "running $command | grep -i autoconf"
+$command | grep -i autoconf
+echo "running $command | grep -i automake"
+$command | grep -i automake
+echo "running $command | grep -i binutils"
+$command | grep -i binutils
+echo "running $command | grep -i bison"
+$command | grep -i bison
+echo "running $command | grep -i cvs"
+$command | grep -i cvs
+echo "running $command | grep -i doxygen"
+$command | grep -i doxygen
+echo "running $command | grep -i dyninst"
+$command | grep -i dyninst
+echo "running $command | grep -i flex"
+$command | grep -i flex
+echo "running $command | grep -i gcc"
+$command | grep -i gcc
+echo "running $command | grep -i glibc"
+$command | grep -i glibc
+echo "running $command | grep -i kernel"
+$command | grep -i kernel
+echo "running $command | grep -i lam"
+$command | grep -i lam
+echo "running $command | grep -i libdwarf"
+$command | grep -i libdwarf
+echo "running $command | grep -i libelf"
+$command | grep -i libelf
+echo "running $command | grep -i libltdl"
+$command | grep -i libltdl
+echo "running $command | grep -i libunwind"
+$command | grep -i libunwind
+echo "running $command | grep -i libxml2"
+$command | grep -i libxml2
+echo "running $command | grep -i make"
+$command | grep -i make
+echo "running $command | grep -i mpi"
+$command | grep -i mpi
+echo "running $command | grep -i mpich"
+$command | grep -i mpich
+echo "running $command | grep -i mpt"
+$command | grep -i mpt
+echo "running $command | grep -i mvapich"
+$command | grep -i mvapich
+echo "running $command | grep -i ncurses"
+$command | grep -i ncurses
+echo "running $command | grep -i python"
+$command | grep -i python
+echo "running $command | grep -i papi"
+$command | grep -i papi
+echo "running $command | grep -i qt"
+$command | grep -i qt
+echo "running $command | grep -i rpm"
+$command | grep -i rpm
+echo "running $command | grep -i sh-"
+$command | grep -i sh-
+echo "running $command | grep -i sqlite"
+$command | grep -i sqlite
+echo "running $command | grep -i tmake"
+$command | grep -i tmake
+echo "running $command | grep -i xxdiff"
+$command | grep -i xxdiff

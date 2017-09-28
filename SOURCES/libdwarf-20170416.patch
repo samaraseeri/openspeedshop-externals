@@ -1,0 +1,22 @@
+--- libdwarf-20170416/libdwarf/Makefile.in	2017-04-06 19:20:07.000000000 -0700
++++ libdwarf-20170416-fixes/libdwarf/Makefile.in	2017-05-25 22:13:04.140127761 -0700
+@@ -56,7 +56,7 @@
+ dwfsanitize =   @dwfsanitize@
+ dwfzlib =       @dwfzlib@
+ SONAME =        libdwarf.so.1
+-CFLAGS =	$(PREINCS) @CPPFLAGS@ @CFLAGS@ $(INCLUDES) $(dwfpic) $(dwfwall) $(dwfsanitize)  $(POSTINCS)
++CFLAGS =	$(PREINCS) $(INCLUDES) @CFLAGS@ @CPPFLAGS@ $(dwfpic) $(dwfwall) $(dwfsanitize)  $(POSTINCS)
+ LDFLAGS =	$(PRELIBS) @LDFLAGS@ $(dwfsanitize) $(POSTLIBS) 
+ HOSTCFLAGS =	$(CFLAGS)
+ HOSTLDFLAGS =	$(PRELIBS) @LDFLAGS@ 
+--- libdwarf-20170416/libdwarf/libdwarf.h.in	2017-04-15 09:22:09.000000000 -0700
++++ libdwarf-20170416-fixes/libdwarf/libdwarf.h.in	2017-05-25 22:09:53.873115250 -0700
+@@ -60,7 +60,7 @@
+ 
+ */
+ 
+-typedef struct Elf Elf;
++struct Elf;
+ typedef struct Elf* dwarf_elf_handle;
+ 
+ /* To enable printing with printf regardless of the

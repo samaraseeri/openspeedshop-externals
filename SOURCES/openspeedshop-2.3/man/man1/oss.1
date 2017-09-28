@@ -1,0 +1,70 @@
+.\" Process this file with
+.\" groff -man -Tascii oss.1
+.\"
+.TH OSS 1 "SEPTEMBER 2017" Linux "User Manuals"
+.SH NAME
+oss \- Open|SpeedShop convenience script overview
+.SH SYNOPSIS
+.nf
+.IP "There are several Open|SpeedShop convenience scripts that begin with oss"
+.fi
+
+.SH TYPICAL USAGE FORM
+.nf
+
+osspcsamp "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+ossusertime "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+osshwc "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+osshwcsamp "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+osshwctime "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+ossio "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+ossiop "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+ossiot "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+ossmem "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+ossmpi "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+ossmpip "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+ossmpit "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+ossomptp "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+osspthreads "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+osscuda "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog"
+
+osscompare "database_file, database_file" [ time, percent ]
+
+For example:
+
+osspcsamp "/opt/openmpi/bin/mpirun -np 4 /u/user/mpi_prog" high
+osscompare "smg2000-pcsamp-64.openss, smg2000-pcsamp-128.openss" percent
+
+.fi
+.SH DESCRIPTION
+.B oss
+
+See all the specific oss convenience command scripts for more detail about 
+each individual script/experiment. 
+
+.SH BUGS
+TBD
+
+.SH AUTHOR
+Open|SpeedShop Team <oss-questions@openspeedshop.org>
+.SH "SEE ALSO"
+.BR openss (1),
+.BR osspcsamp (1),
+.BR ossusertime (1),
+.BR osshwc (1),
+.BR osshwcsamp (1),
+.BR osshwctime (1),
+.BR ossio (1),
+.BR ossiop (1),
+.BR ossiot (1),
+.BR ossmem (1),
+.BR ossmpi (1),
+.BR ossmpip (1),
+.BR ossmpit (1),
+.BR ossomptp (1)
+.BR osspthreads (1)
+.BR osscuda (1)
+.BR osscompare (1)
+.BR OpenSpeedShop (3)
+.BR OpenSpeedShop_offline (3)
+.BR OpenSpeedShop_cbtf (3)

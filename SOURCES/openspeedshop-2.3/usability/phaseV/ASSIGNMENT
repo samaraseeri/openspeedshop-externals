@@ -1,0 +1,169 @@
+################################################################################
+# Copyright (c) 2007 The Krell Institue. All Rights Reserved.
+#
+# This library is free software; you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation; either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# This library is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this library; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+################################################################################
+
+
+                         Usability Study
+
+
+Introduction:
+-------------
+
+For this assignment you'll be asked to create performance
+analysis output by creating and running an Open|SpeedShop 
+performance experiment on an mpi application.
+
+There is no time constraint to "correctly" complete this task.
+
+Please try to "think out loud" as you work through the scenario.   
+It will help us understand where our problems are.
+
+Remember:  You are not being tested.  The user interface and it's
+ease of use, is really what is being analyzed.   Your initial feedback 
+and thoughts as you navigate through this set of tasks will enable 
+us to see our ease of use problem areas.
+
+Open|SpeedShop is a performance tool being developed by the 
+Krell Institute in cooperation and partnership with the Tri-Labs labs.
+
+The executable is, "openss".   
+There is a man page, "openss-MAN".
+
+Thanks!
+We appreciate the time you have taken today to help us!
+
+
+
+
+The Scenario:
+-------------
+
+We will "give" (on zeus) you a tarball file derived from a directory containing  
+containing a version of a program named sweep3d.  The sweep3d source was modified 
+to contain an algorithm change that degrades performance for one of the ranked 
+processes.   Please untar the tarball file in a directory somewhere under your 
+home directory and use the contents of this directory for this usability study.
+
+In general we're asking you to run OpenSpeedShop on this version of sweep3d using
+the OpenSpeedShop graphical user interface (GUI) and to try to determine where
+the performance problem is occurring.  
+
+Typically, and in this case sweep3d.mpi is launched using the srun command
+in a form such as this: srun -N 4 -n 8 sweep3d.mpi.
+
+
+The Assignment:
+
+-----------------------------------------------
+PHASE 1: Run and Analyze Live Data
+-----------------------------------------------
+Step 0:
+
+From the sweep3d subdirectory, run the sweep3d.mpi application
+outside of OpenSpeedShop using this command: srun -N 4 -n 8 sweep3d.mpi.  
+This verifies that sweep3d.mpi runs outside of OpenSpeedShop.
+
+
+Step 1:
+
+
+From the same subdirectory, launch the OpenSpeedShop GUI.
+
+NOTE 1: Please do:  "use openss"
+        This sets up the environment for you to access the OpenSpeedShop tool.
+
+NOTE 2: If needed, please refer to the file "openss-MAN" for hints on 
+        how to launch OpenSpeedShop.  
+
+
+Step 2:
+
+Use the OpenSpeedShop wizard to launch the sweep3d.mpi executable 
+to determine what part of the sweep3d program is taking the most time.
+
+
+NOTE 1: Use the same basic mpi command syntax you used above to launch 
+        sweep3d.mpi outside of OpenSpeedShop.
+
+
+Step 3:
+
+When the experiment completes the Stats Panel will pop up.
+
+After that happens, can you determine which routine is the 
+taking the most time.  
+
+Is it in the sweep3d application?  
+
+Can you determine what hosts and ranks are represented 
+in the Stats Panel performance data display?
+
+
+Step 4:
+
+Save the performance data results from this experiment to a
+file for analysis for another time in the future.
+
+
+Step 5:
+
+Display the results by statement (source line) 
+
+
+Step 6:
+
+Go to statement in the source file that is taking the most time.
+
+You may need to remap the source location from the directory it
+was created to the directory you are running from.
+
+
+Step 7:
+
+Find out if any of the ranked processes are taking more time 
+than the others.
+
+
+Step 8:
+
+Redisplay the results for the whole application displaying the
+results by function.
+
+
+Step 9:
+
+Show the performance results for the rank 0 process only. 
+
+Can you preserve the current Stats Panel results window 
+before doing the above rank 0 display?
+
+
+Step 10:
+
+Compare the performance data from rank 0 to the performance data 
+from rank 1.
+
+
+Step 11:
+
+Exit the OpenSpeedShop tool.
+
+
+
+
+THANK YOU FOR YOUR PARTICIPATION!
+

@@ -1,0 +1,21 @@
+--- mrnet-20170810/conf/Makefile.in	2017-08-10 16:13:41.000000000 -0500
++++ mrnet-20170810-fixes/conf/Makefile.in	2017-08-10 16:21:45.845064570 -0500
+@@ -145,7 +145,7 @@
+ 
+    endif # SILENCE_WARNINGS
+ 
+-   COMMNODE_LDFLAGS += -static-libstdc++ -static-libgcc
++   COMMNODE_LDFLAGS += 
+ 
+ endif #GNU options
+ 
+--- mrnet-20170810/src/lightweight/Packet.c	2017-08-10 16:13:41.000000000 -0500
++++ mrnet-20170810-fixes/src/lightweight/Packet.c	2017-08-10 16:20:50.182062827 -0500
+@@ -11,6 +11,7 @@
+ #include "mrnet_lightweight/Network.h"
+ #include "mrnet_lightweight/Packet.h"
+ #include "xplat_lightweight/vector.h"
++#include "stdbool.h"
+ 
+ void delete_Packet_t(Packet_t* packet)
+ {
