@@ -908,14 +908,19 @@ function setup_for_oss_cbtf() {
        # Check to see if libiomp5.so is installed in root/ompt
        if test -f $KRELL_ROOT_PREFIX/ompt/$LIBDIR/libiomp5.so; then
            export CMAKE_LIBIOMP_PHRASE="-DLIBIOMP_DIR=${KRELL_ROOT_PREFIX}/ompt"
+           #echo "setting-up: CMAKE_LIBIOMP_PHRASE is defined to $CMAKE_LIBIOMP_PHRASE."
        elif test -f $KRELL_ROOT_PREFIX/ompt/$ALTLIBDIR/libiomp5.so; then
            export CMAKE_LIBIOMP_PHRASE="-DLIBIOMP_DIR=${KRELL_ROOT_PREFIX}/ompt"
+           #echo "setting-up: ALT, CMAKE_LIBIOMP_PHRASE is defined to $CMAKE_LIBIOMP_PHRASE."
        else
            if test -f $KRELL_ROOT_PREFIX/$LIBDIR/libiomp5.so; then
                export CMAKE_LIBIOMP_PHRASE="-DLIBIOMP_DIR=${KRELL_ROOT_PREFIX}"
+               #echo "setting-up: noompt, CMAKE_LIBIOMP_PHRASE is defined to $CMAKE_LIBIOMP_PHRASE."
            elif test -f $KRELL_ROOT_PREFIX/$ALTLIBDIR/libiomp5.so; then
                export CMAKE_LIBIOMP_PHRASE="-DLIBIOMP_DIR=${KRELL_ROOT_PREFIX}"
+               #echo "setting-up: noompt,alt, CMAKE_LIBIOMP_PHRASE is defined to $CMAKE_LIBIOMP_PHRASE."
            else
+               echo "setting-up: KRELL_ROOT_OMPT_ROOT is undefined, setting to blanks"
                if [ "$display_summary" = 1 ] ; then 
                    echo "setting-up: KRELL_ROOT_OMPT_ROOT is undefined, setting to blanks"
                fi
@@ -7113,7 +7118,8 @@ function build_elfutils_routine() {
 
      else
         if [ "$build_with_intel" = 1 ]; then
-         CC="icc" CFLAGS="-g -O2" ${ZLIB_INCLUDE} ${ZLIB_LIBS} ./configure --prefix=$KRELL_ROOT_PREFIX --libdir=$KRELL_ROOT_PREFIX/$LIBDIR --datadir=$KRELL_ROOT_PREFIX/share --enable-compat --enable-shared
+         ./configure --prefix=$KRELL_ROOT_PREFIX --libdir=$KRELL_ROOT_PREFIX/$LIBDIR CC="gcc" CFLAGS="-g -O2" ${ZLIB_INCLUDE} ${ZLIB_LIBS}
+         # BUG WITH INTEL CC="icc" CFLAGS="-g -O2" ./configure --prefix=$KRELL_ROOT_PREFIX --libdir=$KRELL_ROOT_PREFIX/$LIBDIR --datadir=$KRELL_ROOT_PREFIX/share --enable-compat --enable-shared  ${ZLIB_INCLUDE} ${ZLIB_LIBS}
         else
          ./configure --prefix=$KRELL_ROOT_PREFIX --libdir=$KRELL_ROOT_PREFIX/$LIBDIR CC="gcc" CFLAGS="-g -O2" ${ZLIB_INCLUDE} ${ZLIB_LIBS}
         fi
