@@ -1,7 +1,0 @@
-_creat()
-_write()
-_open()
-_read()
-_dup2()
-_lseek()
-_close()

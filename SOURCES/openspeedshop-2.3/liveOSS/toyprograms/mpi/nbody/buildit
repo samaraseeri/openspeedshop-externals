@@ -1,4 +1,0 @@
-
-mpicc -o nbody -O1 -g nbody-mpi.c
-
-
