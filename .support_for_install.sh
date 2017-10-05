@@ -31,7 +31,7 @@ papiver=5.5.1
 sqlitever=3.8.4
 libmonitorver=20130218
 vampirtracever=5.3.2
-#dyninstver=9.2.0
+#dyninstver=20171003
 dyninstver=9.3.2
 symtabapiver=8.1.2
 #mrnetver=20161003
@@ -6184,42 +6184,58 @@ function build_dyninst_routine() {
    #echo "KRELL_ROOT_PREFIX=$KRELL_ROOT_PREFIX"
 
    #echo "check libdwarf"
-   if [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/$LIBDIR/libdwarf.so ]; then
-        #echo "KRELL_ROOT_LIBDWARF built libdwarf or user specified libdwarf found"
-        export LIBDWARFDIR=$KRELL_ROOT_LIBDWARF
-        export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBDWARF/$LIBDIR/libdwarf.so
-   elif [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/$LIBDIR/libdwarf.a ]; then
-        #echo "KRELL_ROOT_LIBDWARF built libdwarf or user specified libdwarf found"
-        export LIBDWARFDIR=$KRELL_ROOT_LIBDWARF
-        export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBDWARF/$LIBDIR/libdwarf.a
-   elif [ ! -z $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so ]; then
-        #echo "KRELL_ROOT_PREFIX built libdwarf"
-        export LIBDWARFDIR=$KRELL_ROOT_PREFIX
-        export LIBDWARF_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so
-   elif [ ! -z $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.a ]; then
-        #echo "KRELL_ROOT_PREFIX built libdwarf"
-        export LIBDWARFDIR=$KRELL_ROOT_PREFIX
-        export LIBDWARF_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.a
-   elif [ -d $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so ]; then
-        #echo "root_prefix built libdwarf"
-        export LIBDWARFDIR=$KRELL_ROOT_PREFIX
-        export LIBDWARF_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so
-   elif [ -d $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.a ]; then
-        #echo "root_prefix built libdwarf"
-        export LIBDWARFDIR=$KRELL_ROOT_PREFIX
-        export LIBDWARF_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.a
-   else
-        export LIBDWARFDIR=/usr/lib
-        export LIBDWARF_LIBNAME=/usr/lib/libdwarf.so
-   fi
+   # Find libdwarf libraries in elfutils for newer dyninst versions
+   if [ $dyninstver == "20171003" ]; then
+       if [ ! -z $KRELL_ROOT_LIBELF ] && [ -f $KRELL_ROOT_LIBELF/$LIBDIR/libdw.so ]; then
+            export LIBDWARFDIR=$KRELL_ROOT_LIBELF
+            export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBELF/$LIBDIR/libdw.so
+       elif [ ! -z $KRELL_ROOT_LIBELF ] && [ -f $KRELL_ROOT_LIBELF/$ALTLIBDIR/libdw.so ]; then
+            export LIBDWARFDIR=$KRELL_ROOT_LIBELF
+            export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBELF/$ALTLIBDIR/libdw.so
+       fi
 
+   elif [ $dyninstver == "9.3.2" ]; then
+       if [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/$LIBDIR/libdwarf.so ]; then
+            #echo "KRELL_ROOT_LIBDWARF built libdwarf or user specified libdwarf found"
+            export LIBDWARFDIR=$KRELL_ROOT_LIBDWARF
+            export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBDWARF/$LIBDIR/libdwarf.so
+       elif [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/$LIBDIR/libdwarf.a ]; then
+            #echo "KRELL_ROOT_LIBDWARF built libdwarf or user specified libdwarf found"
+            export LIBDWARFDIR=$KRELL_ROOT_LIBDWARF
+            export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBDWARF/$LIBDIR/libdwarf.a
+       elif [ ! -z $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so ]; then
+            #echo "KRELL_ROOT_PREFIX built libdwarf"
+            export LIBDWARFDIR=$KRELL_ROOT_PREFIX
+            export LIBDWARF_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so
+       elif [ ! -z $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.a ]; then
+            #echo "KRELL_ROOT_PREFIX built libdwarf"
+            export LIBDWARFDIR=$KRELL_ROOT_PREFIX
+            export LIBDWARF_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.a
+       elif [ -d $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so ]; then
+            #echo "root_prefix built libdwarf"
+            export LIBDWARFDIR=$KRELL_ROOT_PREFIX
+            export LIBDWARF_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so
+       elif [ -d $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.a ]; then
+            #echo "root_prefix built libdwarf"
+            export LIBDWARFDIR=$KRELL_ROOT_PREFIX
+            export LIBDWARF_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.a
+       else
+            export LIBDWARFDIR=/usr/lib
+            export LIBDWARF_LIBNAME=/usr/lib/libdwarf.so
+       fi
+    fi
 
-   if [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/include/libdwarf.h ]; then
-        export LIBDWARFINC=$KRELL_ROOT_LIBDWARF/include
-   elif [ ! -z $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/include/libdwarf.h ]; then
-        export LIBDWARFINC=$KRELL_ROOT_PREFIX/include
-   elif [ -d $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/include/libdwarf.h ]; then
-        export LIBDWARFINC=$KRELL_ROOT_PREFIX/include
+   # Find libdwarf includes in elfutils for newer dyninst versions
+   if [ $dyninstver == "20171003" ]; then
+       export LIBDWARFINC=$KRELL_ROOT_LIBELF/include
+   elif [ $dyninstver == "9.3.2" ]; then
+       if [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/include/libdwarf.h ]; then
+            export LIBDWARFINC=$KRELL_ROOT_LIBDWARF/include
+       elif [ ! -z $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/include/libdwarf.h ]; then
+            export LIBDWARFINC=$KRELL_ROOT_PREFIX/include
+       elif [ -d $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/include/libdwarf.h ]; then
+            export LIBDWARFINC=$KRELL_ROOT_PREFIX/include
+       fi
    fi
 
    #echo "KRELL_ROOT_BINUTILS=$KRELL_ROOT_BINUTILS"
@@ -6407,7 +6423,8 @@ function build_dyninst_routine() {
            export CXX=g++
            export CC=gcc
        fi
-       cmake . -DCMAKE_INSTALL_PREFIX=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX -DINSTALL_LIB_DIR=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX/$LIBDIR -DINSTALL_INCLUDE_DIR=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX/include/dyninst -DCMAKE_PREFIX_PATH=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLIBDWARF_LIBRARIES=$LIBDWARF_LIBNAME -DLIBDWARF_INCLUDE_DIR=$LIBDWARFINC -DLIBELF_LIBRARIES=$LIBELF_LIBNAME -DLIBELF_INCLUDE_DIR=$LIBELFINC -DPATH_BOOST=$DYNINST_BOOST_ROOT -DIBERTY_LIBRARIES=$LIBIBERTY_LIBNAME -DIBERTY_LIBRARY=$LIBIBERTY_LIBNAME -DBUILD_RTLIB_32=OFF -DCHECK_RTLIB_32=OFF
+       #cmake . -DCMAKE_INSTALL_PREFIX=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX -Dcap_dwarf=1 -DCMAKE_CXX_FLAGS="-dcap_dwarf -std=c++11 -g -O2" -DCMAKE_C_FLAGS="-dcap_dwarf -std=c++11 -g -O2"  -DINSTALL_LIB_DIR=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX/$LIBDIR -DINSTALL_INCLUDE_DIR=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX/include/dyninst -DCMAKE_PREFIX_PATH=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLIBDWARF_LIBRARIES=$LIBDWARF_LIBNAME -DLIBDWARF_INCLUDE_DIR=$LIBDWARFINC -DLIBELF_LIBRARIES=$LIBELF_LIBNAME -DLIBELF_INCLUDE_DIR=$LIBELFINC -DPATH_BOOST=$DYNINST_BOOST_ROOT -DIBERTY_LIBRARIES=$LIBIBERTY_LIBNAME -DIBERTY_LIBRARY=$LIBIBERTY_LIBNAME -DBUILD_RTLIB_32=OFF -DCHECK_RTLIB_32=OFF
+       cmake . -DCMAKE_INSTALL_PREFIX=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX -Dcap_dwarf=1  -DINSTALL_LIB_DIR=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX/$LIBDIR -DINSTALL_INCLUDE_DIR=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX/include/dyninst -DCMAKE_PREFIX_PATH=$RPM_BUILD_ROOT/$KRELL_ROOT_PREFIX -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLIBDWARF_LIBRARIES=$LIBDWARF_LIBNAME -DLIBDWARF_INCLUDE_DIR=$LIBDWARFINC -DLIBELF_LIBRARIES=$LIBELF_LIBNAME -DLIBELF_INCLUDE_DIR=$LIBELFINC -DPATH_BOOST=$DYNINST_BOOST_ROOT -DIBERTY_LIBRARIES=$LIBIBERTY_LIBNAME -DIBERTY_LIBRARY=$LIBIBERTY_LIBNAME -DBUILD_RTLIB_32=OFF -DCHECK_RTLIB_32=OFF
     
      fi
     
@@ -7862,7 +7879,7 @@ function build() {
                 else
                   echo "Need alternative for rpm here - elf"
                   # Dyninst-9.3.1 and above need to use elfutils only, not libelf
-                  if [ $dyninstver == "9.3.2" ]; then
+                  if [ $dyninstver == "9.3.2" -o $dyninstver == "20171003" ]; then
                       if [ "$found_libz" = 0 ]; then
                           build_zlib_routine
                       fi
