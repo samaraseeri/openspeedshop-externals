@@ -5177,6 +5177,7 @@ function build_cbtf_argonavis_gui_routine() {
      echo "cbtf-argonavis-gui build: KRELL_ROOT_QT=$KRELL_ROOT_QT"
      if [ ! -z $KRELL_ROOT_QT ]; then
          export QTDIR=$KRELL_ROOT_QT 
+         export LD_LIBRARY_PATH=$QTDIR/lib:$LD_LIBRARY_PATH
          echo "cbtf-argonavis-gui build: QTDIR=$KRELL_ROOT_QT"
      else
          if [ -f /usr/lib64/qt5/bin/qmake ]; then
@@ -5184,6 +5185,7 @@ function build_cbtf_argonavis_gui_routine() {
          elif [ -f /usr/lib64/qt4/bin/qmake ]; then
              export QTDIR=/usr/lib64/qt4
          fi
+         echo "cbtf-argonavis-gui build: QTDIR=$QTDIR"
      fi
          
      export GRAPHVIZ_ROOT=$KRELL_ROOT_GRAPHVIZ
@@ -5193,6 +5195,8 @@ function build_cbtf_argonavis_gui_routine() {
      #export LD_LIBRARY_PATH="$PWD/build/release/.obj:$LD_LIBRARY_PATH"
   
      # this is required - w/o the make clean we get build errors
+
+     echo "QTDIR/bin/qmake=${QTDIR}/bin/qmake"
 
      ${QTDIR}/bin/qmake -o Makefile ./openss-gui.pro
      make clean
