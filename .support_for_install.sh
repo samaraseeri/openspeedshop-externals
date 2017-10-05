@@ -5180,7 +5180,7 @@ function build_cbtf_argonavis_gui_routine() {
          echo "cbtf-argonavis-gui build: QTDIR=$KRELL_ROOT_QT"
      else
          if [ -f /usr/lib64/qt5/bin/qmake ]; then
-             export QTDIR=/usr/lib65/qt4
+             export QTDIR=/usr/lib64/qt5
          elif [ -f /usr/lib64/qt4/bin/qmake ]; then
              export QTDIR=/usr/lib64/qt4
          fi
@@ -7262,7 +7262,7 @@ function build_QtGraph_routine() {
        echo "QtGraph build: QTDIR=$KRELL_ROOT_QT"
    else
        if [ -f /usr/lib64/qt5/bin/qmake ]; then
-           export QTDIR=/usr/lib65/qt4
+           export QTDIR=/usr/lib64/qt5
        elif [ -f /usr/lib64/qt4/bin/qmake ]; then
            export QTDIR=/usr/lib64/qt4
        fi
