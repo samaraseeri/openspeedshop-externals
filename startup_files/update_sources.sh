@@ -84,11 +84,11 @@ gzip openspeedshop-$ossrel.tar
 tar -cf cbtf-argonavis-gui-$cbtfagrel.tar cbtf-argonavis-gui/
 gzip cbtf-argonavis-gui-$cbtfagrel.tar
 
-#rm -rf cbtf
-#rm -rf cbtf-krell
-#rm -rf cbtf-argonavis
-#rm -rf cbtf-lanl
-#rm -rf openspeedshop-2.3
-#rm -rf cbtf-argonavis-gui
+rm -rf cbtf
+rm -rf cbtf-krell
+rm -rf cbtf-argonavis
+rm -rf cbtf-lanl
+rm -rf openspeedshop-2.3
+rm -rf cbtf-argonavis-gui
 
 
