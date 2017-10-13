@@ -8082,15 +8082,15 @@ function build() {
               else
                 export KRELL_ROOT_LIBDWARF=/opt/OSS
               fi
-            else
-              build_libdwarf_routine
-              if [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so -a -f $KRELL_ROOT_PREFIX/include/libdwarf.h ]; then
-                  export KRELL_ROOT_LIBDWARF=$KRELL_ROOT_PREFIX
-                  echo "LIBDWARF BUILT SUCCESSFULLY."
-              else
-                  echo "LIBDWARF FAILED TO BUILD - TERMINATING BUILD SCRIPT.  Please check for errors."
-                  exit
-              fi
+            #else
+              #build_libdwarf_routine
+              #if [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so -a -f $KRELL_ROOT_PREFIX/include/libdwarf.h ]; then
+              #    export KRELL_ROOT_LIBDWARF=$KRELL_ROOT_PREFIX
+              #    echo "LIBDWARF BUILT SUCCESSFULLY."
+              #else
+              #    echo "LIBDWARF FAILED TO BUILD - TERMINATING BUILD SCRIPT.  Please check for errors."
+              #    exit
+              #fi
             fi
           fi
         fi
