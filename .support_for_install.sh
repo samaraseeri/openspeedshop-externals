@@ -8082,15 +8082,19 @@ function build() {
               else
                 export KRELL_ROOT_LIBDWARF=/opt/OSS
               fi
-            #else
-              #build_libdwarf_routine
-              #if [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so -a -f $KRELL_ROOT_PREFIX/include/libdwarf.h ]; then
-              #    export KRELL_ROOT_LIBDWARF=$KRELL_ROOT_PREFIX
-              #    echo "LIBDWARF BUILT SUCCESSFULLY."
-              #else
-              #    echo "LIBDWARF FAILED TO BUILD - TERMINATING BUILD SCRIPT.  Please check for errors."
-              #    exit
-              #fi
+            else
+                if [ $dyninstver == "9.3.2" ]; then
+                    build_libdwarf_routine
+                    if [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libdwarf.so -a -f $KRELL_ROOT_PREFIX/include/libdwarf.h ]; then
+                        export KRELL_ROOT_LIBDWARF=$KRELL_ROOT_PREFIX
+                        echo "LIBDWARF BUILT SUCCESSFULLY."
+                    else
+                        echo "LIBDWARF FAILED TO BUILD - TERMINATING BUILD SCRIPT.  Please check for errors."
+                        exit
+                    fi
+                else
+                    echo "skipping LIBDWARF because it is not needed in new versions of Dyninst.  We use the elfutils libdw."
+                fi
             fi
           fi
         fi
