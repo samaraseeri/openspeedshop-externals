@@ -70,13 +70,14 @@ else
     git clone https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git
 fi
 
-if test -d QtGraph; then
-    cd QtGraph
+if test -d QtGraph-${QtGraphrel}; then
+    cd QtGraph-${QtGraphrel}
     git status
     git pull
     cd ..
 else
     git clone https://github.com/OpenSpeedShop/QtGraph.git
+    mv QtGraph QtGraph-${QtGraphrel}
 fi
 
 tar -cf cbtf-${cbtfrel}.tar cbtf/
@@ -94,15 +95,14 @@ gzip openspeedshop-${ossrel}.tar
 tar -cf cbtf-argonavis-gui-${cbtfagrel}.tar cbtf-argonavis-gui/
 gzip cbtf-argonavis-gui-${cbtfagrel}.tar
 
-tar -cf QtGraph-${QtGraphrel}.tar QtGraph/
+tar -cf QtGraph-${QtGraphrel}.tar QtGraph-${QtGraphrel}/
 gzip QtGraph-${QtGraphrel}.tar
 
 #rm -rf cbtf
 #rm -rf cbtf-krell
 #rm -rf cbtf-argonavis
 #rm -rf cbtf-lanl
-#rm -rf openspeedshop-2.3
+#rm -rf openspeedshop-${ossrel}
 #rm -rf cbtf-argonavis-gui
-#rm -rf QtGraph
-
+#rm -rf QtGraph-${QtGraphrel}
 
