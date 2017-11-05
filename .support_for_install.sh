@@ -1684,10 +1684,13 @@ function setup_for_oss_cbtf() {
        export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=${KRELL_ROOT_TLS_TYPE}"
    else
        if [ "$display_summary" = 1 ] ; then 
-           echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of implicit"
+           #echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of implicit"
+           echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of explicit"
        fi
-       export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=implicit"
-       export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=implicit"
+       #export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=implicit"
+       #export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=implicit"
+       export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=explicit"
+       export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=explicit"
    fi
    
    if [ $KRELL_ROOT_RESOLVE_SYMBOLS ]; then
@@ -3093,6 +3096,9 @@ function build_cbtf_krell_routine() {
    #cd cbtf-krell
    pushd cbtf-krell
 
+   if [ -f ${build_root_home}/SOURCES/cbtf-krell-$cbtfver.patch ]; then
+      patch -p1 < ${build_root_home}/SOURCES/cbtf-krell-$cbtfver.patch
+   fi
 
    build_oss_with_cmake=1
    #build_oss_with_cmake=0
