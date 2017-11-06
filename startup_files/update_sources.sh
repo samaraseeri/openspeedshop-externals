@@ -4,14 +4,16 @@ set -x
 ossrel=2.3
 cbtfrel=1.8.1
 cbtfagrel=0.8.1
+QtGraphrel=1.0.0
 
 cd SOURCES
-rm -rf cbtf-1.8.1.tar.gz
-rm -rf cbtf-krell-1.8.1.tar.gz
-rm -rf cbtf-argonavis-1.8.1.tar.gz
-rm -rf cbtf-lanl-1.8.1.tar.gz
-rm -rf openspeedshop-2.3.tar.gz
-rm -rf cbtf-argonavis-gui-0.8.1.tar.gz
+rm -rf cbtf-${cbtfrel}.tar.gz
+rm -rf cbtf-krell-${cbtfrel}.tar.gz
+rm -rf cbtf-argonavis-${cbtfrel}.tar.gz
+rm -rf cbtf-lanl-${cbtfrel}.tar.gz
+rm -rf openspeedshop-${ossrel}.tar.gz
+rm -rf cbtf-argonavis-gui-${cbtfagrel}.tar.gz
+rm -rf QtGraph-${QtGraphrel}.tar.gz
 
 if test -d cbtf; then
     cd cbtf
@@ -68,27 +70,39 @@ else
     git clone https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git
 fi
 
+if test -d QtGraph-${QtGraphrel}; then
+    cd QtGraph-${QtGraphrel}
+    git status
+    git pull
+    cd ..
+else
+    git clone https://github.com/OpenSpeedShop/QtGraph.git
+    mv QtGraph QtGraph-${QtGraphrel}
+fi
 
-tar -cf cbtf-$cbtfrel.tar cbtf/
-gzip cbtf-$cbtfrel.tar
-tar -cf cbtf-krell-$cbtfrel.tar cbtf-krell/
-gzip cbtf-krell-$cbtfrel.tar
-tar -cf cbtf-argonavis-$cbtfrel.tar cbtf-argonavis/
-gzip cbtf-argonavis-$cbtfrel.tar
-tar -cf cbtf-lanl-$cbtfrel.tar cbtf-lanl/
-gzip cbtf-lanl-$cbtfrel.tar
+tar -cf cbtf-${cbtfrel}.tar cbtf/
+gzip cbtf-${cbtfrel}.tar
+tar -cf cbtf-krell-${cbtfrel}.tar cbtf-krell/
+gzip cbtf-krell-${cbtfrel}.tar
+tar -cf cbtf-argonavis-${cbtfrel}.tar cbtf-argonavis/
+gzip cbtf-argonavis-${cbtfrel}.tar
+tar -cf cbtf-lanl-${cbtfrel}.tar cbtf-lanl/
+gzip cbtf-lanl-${cbtfrel}.tar
 
-tar -cf openspeedshop-$ossrel.tar openspeedshop-$ossrel/
-gzip openspeedshop-$ossrel.tar
+tar -cf openspeedshop-${ossrel}.tar openspeedshop-${ossrel}/
+gzip openspeedshop-${ossrel}.tar
 
-tar -cf cbtf-argonavis-gui-$cbtfagrel.tar cbtf-argonavis-gui/
-gzip cbtf-argonavis-gui-$cbtfagrel.tar
+tar -cf cbtf-argonavis-gui-${cbtfagrel}.tar cbtf-argonavis-gui/
+gzip cbtf-argonavis-gui-${cbtfagrel}.tar
 
-rm -rf cbtf
-rm -rf cbtf-krell
-rm -rf cbtf-argonavis
-rm -rf cbtf-lanl
-rm -rf openspeedshop-2.3
-rm -rf cbtf-argonavis-gui
+tar -cf QtGraph-${QtGraphrel}.tar QtGraph-${QtGraphrel}/
+gzip QtGraph-${QtGraphrel}.tar
 
+#rm -rf cbtf
+#rm -rf cbtf-krell
+#rm -rf cbtf-argonavis
+#rm -rf cbtf-lanl
+#rm -rf openspeedshop-${ossrel}
+#rm -rf cbtf-argonavis-gui
+#rm -rf QtGraph-${QtGraphrel}
 
