@@ -98,11 +98,11 @@ gzip cbtf-argonavis-gui-${cbtfagrel}.tar
 tar -cf QtGraph-${QtGraphrel}.tar QtGraph-${QtGraphrel}/
 gzip QtGraph-${QtGraphrel}.tar
 
-#rm -rf cbtf
-#rm -rf cbtf-krell
-#rm -rf cbtf-argonavis
-#rm -rf cbtf-lanl
-#rm -rf openspeedshop-${ossrel}
-#rm -rf cbtf-argonavis-gui
-#rm -rf QtGraph-${QtGraphrel}
+rm -rf cbtf
+rm -rf cbtf-krell
+rm -rf cbtf-argonavis
+rm -rf cbtf-lanl
+rm -rf openspeedshop-${ossrel}
+rm -rf cbtf-argonavis-gui
+rm -rf QtGraph-${QtGraphrel}
 
