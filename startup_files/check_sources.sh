@@ -2,8 +2,8 @@
 #set -x
 
 ossrel=2.3
-cbtfrel=1.8.1
-cbtfagrel=0.8.1
+cbtfrel=1.9
+cbtfagrel=1.3.0
 QtGraphrel=1.0.0
 
 cd SOURCES

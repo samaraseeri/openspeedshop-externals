@@ -31,7 +31,8 @@ papiver=5.5.1
 sqlitever=3.8.4
 libmonitorver=20130218
 vampirtracever=5.3.2
-dyninstver=20171003
+#dyninstver=20171003
+dyninstver=20171106
 #dyninstver=9.3.2
 symtabapiver=8.1.2
 #mrnetver=20161003
@@ -53,8 +54,10 @@ llvm_openmpver=20170926
 
 # OSS and CBTF versions
 openspeedshopver=2.3
-cbtfver=1.8.1
-cbtfargoguiver=0.8.1
+#cbtfver=1.8.1
+cbtfver=1.9
+#cbtfargoguiver=0.8.1
+cbtfargoguiver=1.3.0
 
 default_oss_prefix=/opt/OSS
 
@@ -6197,7 +6200,7 @@ function build_dyninst_routine() {
 
    #echo "check libdwarf"
    # Find libdwarf libraries in elfutils for newer dyninst versions
-   if [ $dyninstver == "20171003" ]; then
+   if [ $dyninstver == "20171003" -o $dyninstver == "20171106" ]; then
        if [ ! -z $KRELL_ROOT_LIBELF ] && [ -f $KRELL_ROOT_LIBELF/$LIBDIR/libdw.so ]; then
             export LIBDWARFDIR=$KRELL_ROOT_LIBELF
             export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBELF/$LIBDIR/libdw.so
@@ -6235,10 +6238,13 @@ function build_dyninst_routine() {
             export LIBDWARFDIR=/usr/lib
             export LIBDWARF_LIBNAME=/usr/lib/libdwarf.so
        fi
-    fi
+   else
+       echo "Problem with dyninstver=$dyninstver: EXITING THE SCRIPT"
+       exit
+   fi
 
    # Find libdwarf includes in elfutils for newer dyninst versions
-   if [ $dyninstver == "20171003" ]; then
+   if [ $dyninstver == "20171003" -o $dyninstver == "20171106" ]; then
        export LIBDWARFINC=$KRELL_ROOT_LIBELF/include
    elif [ $dyninstver == "9.3.2" ]; then
        if [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/include/libdwarf.h ]; then
@@ -7659,12 +7665,12 @@ function build() {
         nanswer=$1
     fi
     echo $nanswer > LAST_OPTION
-    if [ -z $OPENSS_PREFIX ]; then
-       ./Build-RPM-krellroot newrpmloc
-    else
-       ./Build-RPM newrpmloc
-    fi
-    more ~/.rpmmacros
+    #if [ -z $OPENSS_PREFIX ]; then
+    #   ./Build-RPM-krellroot newrpmloc
+    #else
+    #   ./Build-RPM newrpmloc
+    #fi
+    #more ~/.rpmmacros
     envvars
 #    if [ "$nanswer" = 0  -o "$nanswer" = 9 ]; then
 #        echo 
@@ -7891,7 +7897,7 @@ function build() {
                 else
                   echo "Need alternative for rpm here - elf"
                   # Dyninst-9.3.1 and above need to use elfutils only, not libelf
-                  if [ $dyninstver == "9.3.2" -o $dyninstver == "20171003" ]; then
+                  if [ $dyninstver == "9.3.2" -o $dyninstver == "20171003" -o $dyninstver == "20171106" ]; then
                       if [ "$found_libz" = 0 ]; then
                           build_zlib_routine
                       fi
