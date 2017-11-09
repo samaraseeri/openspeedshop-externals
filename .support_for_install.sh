@@ -583,7 +583,7 @@ function envvars() {
                                     mrnet: builds OpenSpeedShop for online instrumentation: dyninst/mrnet
             KRELL_ROOT_TARGET_ARCH      Set to the target architecture to build the Open|SpeedShop runtime environment for.
             KRELL_ROOT_PPC64_BITMODE_64 Set to indicate you want a 64 bit version of ppc64 OSS built.  Set to 1 or leave unset to indicate 32 bit build.
-            KRELL_ROOT_IMPLICIT_TLS     When set, this enables Open|SpeedShop to use implicitly created tls storage. default is explicit.
+            KRELL_ROOT_IMPLICIT_TLS     When set, this enables Open|SpeedShop to use implicitly created tls storage. default is implicit on x86_64 explicit on ppc64le.
         
         -Open|SpeedShop MPI and Vampirtrace
             KRELL_ROOT_MPI_LAM          Set to MPI LAM installation dir. default is null.
@@ -1687,13 +1687,20 @@ function setup_for_oss_cbtf() {
        export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=${KRELL_ROOT_TLS_TYPE}"
    else
        if [ "$display_summary" = 1 ] ; then 
-           #echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of implicit"
-           echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of explicit"
+           if [ `uname -m` = "ppc64le" -o `uname -m` = "bgq" -o `uname -m` = "ppc64" -o `uname -m` = "bgl" ]; then
+               echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of explicit"
+           else
+               echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of implicit"
+           fi
        fi
-       #export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=implicit"
-       #export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=implicit"
-       export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=explicit"
-       export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=explicit"
+
+       if [ `uname -m` = "ppc64" -o `uname -m` = "bgq" -o `uname -m` = "ppc64le" -o `uname -m` = "bgl" ]; then
+           export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=explicit"
+           export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=explicit"
+       else
+           export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=implicit"
+           export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=implicit"
+       fi
    fi
    
    if [ $KRELL_ROOT_RESOLVE_SYMBOLS ]; then
