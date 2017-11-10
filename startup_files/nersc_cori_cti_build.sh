@@ -15,27 +15,38 @@ export cc=gcc
 export CC=gcc
 export CXX=g++
 
-BASE_DIR=/project/projectdirs/m888/jgalaro/openss/cori
-TOOL_VERS="_v2.3.1.rc6.cti"
+BASE_IDIR=/project/projectdirs/m888/jgalaro/openss/cori
+TOOL_VERS="_v2.3.1.release"
+GRAPHVIZ_VERS="-2.40.1"
+QTGRAPH_VERS="-1.0.0"
+
 
 #MPICH_DIR=/opt/cray/mpt/default/gni//mpich-gnu/5.1
 #MPICH_DIR=/opt/cray/pe/mpt/7.5.3/gni/mpich-gnu/5.1
 MPICH_DIR=/opt/cray/pe/mpt/7.6.0/gni/mpich-gnu/5.1
 #ALPS_DIR=/opt/cray/alps/5.2.4-2.0502.9774.31.11.ari
 #ALPS_DIR=/opt/cray/alps/6.1.3-17.12
+#ALPS_DIR=/opt/cray/alps/6.4.1-6.0.4.0_7.2__g86d0f3d.ari
 #BOOST_DIR=/usr/common/software/boost/1.59/hsw/gnu
 PAPI_IDIR=/opt/cray/pe/papi/5.5.1.2
-KROOT_IDIR=${BASE_DIR}/krellroot${TOOL_VERS}
+KROOT_IDIR=${BASE_IDIR}/krellroot${TOOL_VERS}
+CBTF_IDIR=${BASE_IDIR}/cbtf${TOOL_VERS}
+OSSCBTF_IDIR=${BASE_IDIR}/osscbtf${TOOL_VERS}
+GRAPHVIZ_IDIR=${BASE_IDIR}/graphviz${GRAPHVIZ_VERS}
+QTGRAPH_IDIR=${BASE_IDIR}/QtGraph${QTGRAPH_VERS}
+CTI_IDIR=/opt/cray/pe/cti/1.0.6
 
-./install-tool --use-cti --build-krell-root --target-shared --target-arch cray --runtime-only --krell-root-prefix ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-mpich ${MPICH_DIR} --force-boost-build --with-cti /opt/cray/pe/cti/1.0.6 --with-papi ${PAPI_IDIR}
 
-#./install-tool --use-cti --build-dyninst --target-shared --target-arch cray --runtime-only --krell-root-prefix ${BASE_DIR}/krellroot${TOOL_VERS}/compute  --with-cti /opt/cray/pe/cti/1.0.6 --with-libdwarf ${KROOT_IDIR}/compute --with-libelf ${KROOT_IDIR}/compute --with-binutils ${KROOT_IDIR}/compute --with-boost ${KROOT_IDIR}/compute
+./install-tool --use-cti --build-krell-root --target-shared --target-arch cray --runtime-only --krell-root-prefix ${KROOT_IDIR}/compute --with-mpich ${MPICH_DIR} --force-boost-build --with-cti ${CTI_IDIR} --with-papi ${PAPI_IDIR} 2>&1 | tee install_tool_build_compute_root.log
 
-#./install-tool --build-offline --target-shared --target-arch cray --runtime-only --openss-prefix ${BASE_DIR}/ossoff${TOOL_VERS}/compute --krell-root-install-prefix ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-mpich ${MPICH_DIR} --with-papi ${PAPI_IDIR}
+./install-tool --build-cbtf-all --runtime-only --target-arch cray --target-shared --cbtf-prefix ${CBTF_IDIR}/compute --krell-root-prefix ${KROOT_IDIR}/compute --with-mpich ${MPICH_DIR} --with-papi ${PAPI_IDIR} 2>&1 | tee install_tool_build_compute_cbtf.log
 
+# ALTERNATIVE BUILDS
+#./install-tool --use-cti --build-llvm-openmp --target-shared --target-arch cray --runtime-only --krell-root-prefix ${KROOT_IDIR}/compute  2>&1 | tee install_tool_build_compute_ompt.log
 
-./install-tool --build-cbtf-all --runtime-only --target-arch cray --target-shared --cbtf-prefix ${BASE_DIR}/cbtf${TOOL_VERS}/compute --krell-root-prefix ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-mpich ${MPICH_DIR} --with-papi ${PAPI_IDIR}
+#./install-tool --use-cti --build-dyninst --target-shared --target-arch cray --runtime-only --krell-root-prefix ${BASE_IDIR}/krellroot${TOOL_VERS}/compute  --with-cti /opt/cray/pe/cti/1.0.6 --with-libdwarf ${KROOT_IDIR}/compute --with-libelf ${KROOT_IDIR}/compute --with-binutils ${KROOT_IDIR}/compute --with-boost ${KROOT_IDIR}/compute
 
+#./install-tool --build-offline --target-shared --target-arch cray --runtime-only --openss-prefix ${BASE_IDIR}/ossoff${TOOL_VERS}/compute --krell-root-install-prefix ${BASE_IDIR}/krellroot${TOOL_VERS}/compute --with-mpich ${MPICH_DIR} --with-papi ${PAPI_IDIR}
 
 # ----------------------------------
 # For LOGIN NODE builds
@@ -54,16 +65,27 @@ module load papi/5.5.1.2
 #module load /opt/cray/ari/modulefiles/alps/6.1.3-17.12
 #module load /opt/modulefiles/gcc/6.2.0
 
-#./install-tool --use-cti --build-mrnet  --krell-root-prefix ${BASE_DIR}/krellroot${TOOL_VERS} --with-boost ${BASE_DIR}/krellroot${TOOL_VERS} --with-cti /opt/cray/pe/cti/1.0.6 
 
-./install-tool --use-cti --build-krell-root  --krell-root-prefix ${BASE_DIR}/krellroot${TOOL_VERS} --with-mpich ${MPICH_DIR} --force-boost-build --with-cti /opt/cray/pe/cti/1.0.6 --with-papi ${PAPI_IDIR}
+./install-tool --use-cti --build-krell-root  --krell-root-prefix ${KROOT_IDIR} --with-mpich ${MPICH_DIR} --force-boost-build --with-cti ${CTI_IDIR} --with-papi ${PAPI_IDIR} 2>&1 | tee install_tool_build_login_kroot.log
 
-#./install-tool --build-offline --openss-prefix ${BASE_DIR}/oss_offline${TOOL_VERS} --krell-root-install-prefix ${BASE_DIR}/krellroot${TOOL_VERS} --with-boost ${BASE_DIR}/krellroot${TOOL_VERS} --with-mpich ${MPICH_DIR} --with-runtime-dir ${BASE_DIR}/oss_offline${TOOL_VERS}/compute --with-papi ${PAPI_IDIR}
+./install-tool --runtime-target-arch cray --build-cbtf-all --cbtf-prefix ${CBTF_IDIR} --krell-root-prefix ${KROOT_IDIR} --with-mpich ${MPICH_DIR} --with-cn-boost ${KROOT_IDIR}/compute --with-cn-mrnet ${KROOT_IDIR}/compute --with-cn-xercesc ${KROOT_IDIR}/compute --with-cn-libmonitor ${KROOT_IDIR}/compute --with-cn-libunwind ${KROOT_IDIR}/compute --with-cn-dyninst ${KROOT_IDIR}/compute --with-cn-papi ${PAPI_IDIR} --with-cn-cbtf-krell ${CBTF_IDIR}/compute --with-cn-cbtf ${CBTF_IDIR}/compute --with-binutils ${KROOT_IDIR} --with-boost ${KROOT_IDIR} --with-mrnet ${KROOT_IDIR} --with-xercesc ${KROOT_IDIR} --with-libmonitor ${KROOT_IDIR} --with-libunwind ${KROOT_IDIR} --with-dyninst ${KROOT_IDIR}  --with-papi ${PAPI_IDIR} 2>&1 | tee install_tool_build_login_cbtf.log
+
+./install-tool --target-arch cray --build-oss --openss-prefix ${OSSCBTF_IDIR} --with-cn-cbtf-krell ${CBTF_IDIR}/compute --krell-root-prefix ${KROOT_IDIR} --with-mpich ${MPICH_DIR} --with-boost ${KROOT_IDIR} --with-mrnet ${KROOT_IDIR} --with-xercesc ${KROOT_IDIR} --with-libmonitor ${KROOT_IDIR} --with-libunwind ${KROOT_IDIR} --with-dyninst ${KROOT_IDIR} --with-libelf ${KROOT_IDIR} --with-libdwarf ${KROOT_IDIR} --with-binutils ${KROOT_IDIR} --cbtf-prefix ${CBTF_IDIR} --with-papi ${PAPI_IDIR} 2>&1 | tee install_tool_build_login_osscbtf.log
+
+# Build graphviz for support of building the new cbtf-argonavis-gui
+./install-tool --build-graphviz --krell-root-prefix ${GRAPHVIZ_IDIR} 2>&1 | tee install_tool_build_graphviz.log
+
+# Build QtGraph for support of building the new cbtf-argonavis-gui, uses graphviz
+./install-tool --build-QtGraph --krell-root-prefix ${QTGRAPH_IDIR} --with-graphviz ${GRAPHVIZ_IDIR} --with-qt /usr/lib64/qt4 2>&1 | tee install_tool_build_QtGraph.log
+
+# Build new cbtf-argonavis-gui, uses graphviz and QtGraph 
+./install-tool --build-cbtfargonavisgui --with-openss ${OSSCBTF_IDIR} --with-cbtf ${CBTF_IDIR} --krell-root-prefix ${KROOT_IDIR} --with-graphviz ${GRAPHVIZ_IDIR} --with-QtGraph ${QTGRAPH_IDIR} --with-boost ${KROOT_IDIR} --with-qt /usr/lib64/qt4 2>&1 | tee install_tool_build_cbtf_gui.log
+
+
+
+# ALTERNATIVE BUILDS
+#./install-tool --use-cti --build-mrnet  --krell-root-prefix ${BASE_IDIR}/krellroot${TOOL_VERS} --with-boost ${BASE_IDIR}/krellroot${TOOL_VERS} --with-cti /opt/cray/pe/cti/1.0.6 
+#./install-tool --build-offline --openss-prefix ${BASE_IDIR}/oss_offline${TOOL_VERS} --krell-root-install-prefix ${BASE_IDIR}/krellroot${TOOL_VERS} --with-boost ${BASE_IDIR}/krellroot${TOOL_VERS} --with-mpich ${MPICH_DIR} --with-runtime-dir ${BASE_IDIR}/oss_offline${TOOL_VERS}/compute --with-papi ${PAPI_IDIR}
 
 #mv BUILD/cori12/openspeedshop-2.3 BUILD/cori12/openspeedshop-2.3-offline
-
-./install-tool --runtime-target-arch cray --build-cbtf-all --cbtf-prefix ${BASE_DIR}/cbtf${TOOL_VERS} --krell-root-prefix ${BASE_DIR}/krellroot${TOOL_VERS} --with-mpich ${MPICH_DIR} --with-cn-boost ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-cn-mrnet ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-cn-xercesc ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-cn-libmonitor ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-cn-libunwind ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-cn-dyninst ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-cn-papi ${BASE_DIR}/krellroot${TOOL_VERS}/compute --with-cn-cbtf-krell ${BASE_DIR}/cbtf${TOOL_VERS}/compute --with-cn-cbtf ${BASE_DIR}/cbtf${TOOL_VERS}/compute --with-binutils ${BASE_DIR}/krellroot${TOOL_VERS} --with-boost ${BASE_DIR}/krellroot${TOOL_VERS} --with-mrnet ${BASE_DIR}/krellroot${TOOL_VERS} --with-xercesc ${BASE_DIR}/krellroot${TOOL_VERS} --with-libmonitor ${BASE_DIR}/krellroot${TOOL_VERS} --with-libunwind ${BASE_DIR}/krellroot${TOOL_VERS} --with-dyninst ${BASE_DIR}/krellroot${TOOL_VERS}  --with-papi ${PAPI_IDIR}
-
-./install-tool --target-arch cray --build-oss --openss-prefix ${BASE_DIR}/osscbtf${TOOL_VERS} --with-cn-cbtf-krell ${BASE_DIR}/cbtf${TOOL_VERS}/compute --krell-root-prefix ${BASE_DIR}/krellroot${TOOL_VERS} --with-mpich ${MPICH_DIR} --with-boost ${BASE_DIR}/krellroot${TOOL_VERS} --with-mrnet ${BASE_DIR}/krellroot${TOOL_VERS} --with-xercesc ${BASE_DIR}/krellroot${TOOL_VERS} --with-libmonitor ${BASE_DIR}/krellroot${TOOL_VERS} --with-libunwind ${BASE_DIR}/krellroot${TOOL_VERS} --with-dyninst ${BASE_DIR}/krellroot${TOOL_VERS} --with-libelf ${BASE_DIR}/krellroot${TOOL_VERS} --with-libdwarf ${BASE_DIR}/krellroot${TOOL_VERS} --with-binutils ${BASE_DIR}/krellroot${TOOL_VERS} --cbtf-prefix ${BASE_DIR}/cbtf${TOOL_VERS} --with-papi ${PAPI_IDIR}
-
-./install-tool --build-cbtfargonavisgui --openss-prefix ${BASE_DIR}/osscbtf${TOOL_VERS} --krell-root-prefix ${BASE_DIR}/krellroot${TOOL_VERS} --with-boost ${BASE_DIR}/krellroot${TOOL_VERS} --with-mrnet ${BASE_DIR}/krellroot${TOOL_VERS} --with-dyninst ${BASE_DIR}/krellroot${TOOL_VERS} --cbtf-prefix ${BASE_DIR}/cbtf${TOOL_VERS} --with-qt /usr/lib64/qt4
+#./install-tool --build-cbtfargonavisgui --openss-prefix ${BASE_IDIR}/osscbtf${TOOL_VERS} --krell-root-prefix ${BASE_IDIR}/krellroot${TOOL_VERS} --with-boost ${BASE_IDIR}/krellroot${TOOL_VERS} --with-mrnet ${BASE_IDIR}/krellroot${TOOL_VERS} --with-dyninst ${BASE_IDIR}/krellroot${TOOL_VERS} --cbtf-prefix ${BASE_IDIR}/cbtf${TOOL_VERS} --with-qt /usr/lib64/qt4
