@@ -1,5 +1,308 @@
 
-This represents a new OpenSpeedShop-2.3 release.
+This represents a new OpenSpeedShop-2.3.1 release.
+
+---------------------------------------------------------------------
+Here is a partial list of the changes since the 2.3.0 release.
+---------------------------------------------------------------------
+
+Fixes for the IBM power platform related to TLS and blob sizes.
+
+Changes for supporting OpenMP-5.0 OMPT interface with the OpenSpeedShop sampling and omptp experiments on Tri-lab platforms.
+Build llvm-openmp instead of ompt by default.
+Added llvm-openmp to the OpenSpeedShop build in spack and modified the llvm-openmp spack package to build the library standalone so it can be linked into OpenSpeedShop.
+Add more derived metric help text (help hwcsamp). 
+Update the compare convenience script with more information.
+Fixes for unwinding on powerpc64 platform. Affects sampling and tracing experiments. profiling experiments still work as usual.
+
+There were a number of issues with the driver script that were discovered while debugging on serrano and then verified the same issues on another system.
+The low, high, default flags for pcsamp and usertime did not work. For example: osspcsamp mpirun -np 2 ./nbody low just used the default value. 
+This is because the settings for high_flag, low_flag, and default_value_flag are true or false, but the check were for 1 or 0. That apparently does not work.  This is fixed.
+If we set CBTF_PCSAMP_RATE or CBTF_USERTIME_RATE, OSS used those values but reported to the user that it was using the default rate value. This is fixed."
+
+Updated openspeedshop and cbtf-krell to be able to use binutils-2.28 as requested by Intel.  Comment out the bfd_set_error_handler code since it was not implemented and binutils-2.28 conflicts with the bfdErrHandler definition from the 2.23 and 2.24 binutils versions we had been using.  For OSS, Comment out the bfd_set_error_handler code since it was not implemented and binutils-2.28 conflicts with the bfdErrHandler definition from the 2.23 and 2.24 binutils versions we had been using.  Add the tarball to the ROOT source repository and update the build scripts.  Then test.
+
+Fix two issues dicovered testing daemonTool at LANL.
+1. Fix localhost topology generation where an extra level was created with no terminating be node. 
+2. Fix handling of slurm allocations for 2 to N nodes. 
+We should now create a tree that has leaf nodes for each node in an allocation and as many intermediate nodes (CP) for reduction nodes. Tested with slurm environment and a simple localhost test on laptop.
+
+For openspeedshop, IBM named their libmpi library libmpi_ibm.  Add mpi_ibm to the library search names in the find_package file for OpenMPI.
+
+Continue work on moving up to version 9.3.2 of Dyninst 9.2 for better Power 8 support.  This includes changes to build scripts and introducing using elfutils instead of libelf-0.8.13 and making sure libz is available.  Investigate DyninstAPI interface change that is impacting SymtabAPISymbols::getAllSymbols in core/src/SymtabAPISymbols.cpp.  Turned out that this code was dead code, so it was removed.
+
+Updates all cmake builds to use the cmake way of specifying for position independent code (PIC).  Remove all remaining references to libtool (ltdl) code that where not needed.  Changed all collectors built by cbtf-krell to link dependent code (services,messages) from archive libraries (.a's) into the named collector type and adjusted cbtfrun.in to only preload the minimal needed for the collector to to work. Fixed a few more compiler warnings.
+
+Disable EXPLICIT_TLS for mem collector.c when build is configured for TLS_MODEL=explicit due to malloc wrapper issues. Fix omptp collector callbacks to handle explicit tls model. Remove conflicting (and unused) function for destroying explicit tls in services/collector/collector.c since that code already handled free of explict tls memory
+
+Remove older deprecated symbol code that was incompatible with 9.3.2 (method getAllSymbols).
+
+Many cuda experiment related fixes and adjustments to follow the cbtf-krell communication patterns better.
 
 
-We have moved from using GNU autotools to build OpenSpeedShop to the cmake build tool.
+
+NOTE: 2.3.1 has important fixes which prevented OpenSpeedShop from working on Omni-Path systems.
+      We are still seeing some issues with usertime and hwctime experiments on Omni-Path systems.
+      We are working on those issues as well and those fixes will be in the 2.3.1 official release.
+
+      There are also changes for building MRNet with CTI options.  It appears Cray is moving toward using the CTI interface on new systems.
+      See startup_files/dod_onyx_build.sh for the new options to use on those systems.   The look like this: (--use-cti and --with-cti).
+      For example:
+
+          ./install-tool --use-cti --runtime-only --target-arch cray --target-shared  \
+                 --build-krell-root --krell-root-prefix ${KROOT_IDIR}/compute  \
+                 --with-mpich ${MPICH_IDIR} --with-cti /opt/cray/pe/cti/1.0.4 
+
+
+We have found these issues with the base 2.3.0 release. 
+The issues are fixed in a 2.3.1 release.
+We apologize if you have encountered any of these.
+
+Several people requested we fix the python scripting API to be able to run experiments from it.  
+This is fixed, see Issue 18 below.
+
+Also, the module files for OSS/CBTF have to change from what they used to be for the offline versions.
+More environment variables need to be set.   See the NOTE at the end of this file for the new module file example.
+
+We now build cmake-3.2.2 as the first step of the build process.   New cmake versions break the OMPT component build, which is the first component built in the krellroot.  To prevent this failure, we decided to provide our own version of cmake, known to work in building OMPT until we can figure out the issue and report it to the cmake maintainers.
+
+-------------------------------
+Issues found and fixed:
+-------------------------------
+
+Issue 1: 
+The --offline mode of operation in the CBTF build was apparently broken by a late fix for another issue.  This is fixed.
+
+Issue 2: 
+If an executable is passed to OpenSpeedShop but does not exist.  OpenSpeedShop now puts out an error message and exits and reports the issue to the user.  This is fixed.
+
+Issue 3: 
+The iot and mpip views had extraneous data output in the call path views in both the command line interface (CLI) and in the graphical user interface (GUI) views.   This is fixed.
+
+Issue 4: 
+Builds for the Cray for the default CBTF mode of operation were broken by the same late fix (see Issue 1).  This caused a runtime error that looked like this:
+
+  what():  The specified plugin ("/project/projectdirs/m888/jgalaro/edison/openss/cbtf_v2.3.0.beta1/lib64/KrellInstitute/Components") doesn't exist or is not of the correct format. dlopen() reported "/project/projectdirs/m888/jgalaro/edison/openss/cbtf_v2.3.0.beta1/lib64/KrellInstitute/Components: cannot read file data: Is a directory".
+
+This is fixed.
+
+Issue 5: 
+Turn off the debug from the OMPT interface which shows up when profiling OpenMP and OpenMP/MPI applications.
+
+Issue 6:
+Created an OSS Reference Manual by stripping out non-OSS information out of the Users Guide.  
+Add pdf version of latest OSS Reference guide to the docs directory, so it can be accessed from the new GUI.
+Add the latest version of the Quick Start Guide to the docs directory, so it can be accessed from the new GUI.
+
+Issue 7:
+Update the openss cmake file to also honor qopenmp which is what Intel has as its new default for linking 
+in the openMP library.   Also, add linking of openMP library to osscollect, which needs it now and it is not found 
+if the correct (intel or gnu) library is not provided.
+
+Issue 8:
+Identified and fixed cuda experiment issues on Tri-labs platforms.
+
+Issue 9:
+Update the cbtf-argonavis-gui tarball with new changes for accessing documentation.
+Add new cuda gui tarball and update the support script version to 0.8.1.  
+
+Issue 10:
+Make papi-5.5.1 the default papi version.
+
+Issue 11:
+Tighten up the checks for finding boost, so we do not have to use force-build-build.  Look for the boost components that cbtf needs to be there.
+
+Issue 12:
+Add changes to allow the offline version of OSS to build on BGQ.  
+Needed a means to use the compute node version of libmonitor.
+Add an unwinding signal handler for segv.  Adding for Don - this aimed at the offline version of OSS.
+
+Issue 13:
+Update the name of the openMP specific collector in one of the code blocks that was missed in a previous update.  
+Changed ompt to omptp.
+
+Issue 14:
+Fix an issue where the fact cray alps was found in the find package step but not recognized in the cbtf 
+topology generation code because of the code needing a compiler definition (define) being added to 
+the build of cbtf-core-mrnet and its static version. 
+
+Issue 15:
+Add find libmonitor cmake file for cbtf-argonavis.
+Add code to check for libmonitor and the include and library files in the cuda collector build. 
+Also, do not build cupti_avail if cupti version is less than 7.
+Add the change in the build script to support the cbtf-argonavis libmonitor recognition.
+Do not build the cuda collector when building on front-end for the Cray.  The collectors were built 
+via the compute node build and there is no cbtf-krell/services built for the front-end, so compile errors occur.
+Add passing of the target phrase to the cbtf-argonavis build.
+
+Issue 16:
+Updates to CLI views: Remove OpenMpi from the header text on the load balance view of a single rank that 
+shows the load balance on the underlying OpenMP threads.  Only show ThreadId instead of OpenMP ThreadId.
+
+Issue 17:
+Remove Bfd_LIBRARY_SHARED reference from the daemonTool CMakeLists.txt file, it is/was not needed and 
+was causing an issue in the spack build of cbtf-krell.  Also, take out unneeded reference to BFD shared 
+library in the testXDR build cmake file.
+
+Issue 18:
+Fix issues discovered testing the python scripting api. The python interface is used via 
+cbtf-offline.py.in when creating python scripts to run and view experiments with python 
+and when doing same using the interactive cli commands (eg. expcreate,expattach,expgo). 
+In the past the cbtf-offline.py.in managed the entire environment preparation and directly 
+used the framework-cbtf instrumentor to launch mrnet etc. Now the cbtf-offline.py.in script 
+will call the convenience script which handles the environment and osscollect which parses 
+the command for mpi and openmp and then launches the mrnet network and experiment. 
+Additionally, the pyscripting issue exposed an issue where the view code failed with 
+unresolved symbols under python and where the openmp related view code was not actually 
+creating omp work functions in the correct library (should be libopenss-cli based on how 
+this is coded using .txx files).  Extensive testing now shows the python api is working 
+and openmp speedups are active.
+
+Issue 19:
+Updates to the shared collection code in cbtf-krell pertaining to libmonitor callbacks and 
+previous change that allowed cuda to track threads created during mpi start-up 
+(which cbtf-krell collection previously ignored). That broke the newly added 
+--offline mode since some mrnet specific callbacks need to exist for runtime 
+symbols but should be a no-op (empty functions) for --offline mode. This change 
+also updates libmonitor callbacks for fork handling based on some traces from failed 
+runs of the cuda experiment on PFE.
+
+Issue 20:
+The tool needs to prefer openmp thread id's over posix thread id's. This fixes an 
+additional case where posix thread id was tested BEFORE the openmp thread id, resulting 
+in posix thread id's being displayed.  The tracing collectors provide a dm_id detail to 
+allow displaying a rank/pid, threadid, or rank/pid:threadid pair in the -v trace output.  
+This change enforces usage of the simple integer thread id (via monitor_thread_num used 
+as the omp_tid in the collectors) as the thread identifier rather than the less useful 
+(eg -t range) posix thread ids.  
+
+Issue 21:
+Created an unwinding signal handler for segv aimed at the offline version of OSS.
+
+Issue 22:
+Fix a problem building the semi-deprecated offline build of OSS.  We were including 
+libopenss-framework-cbtf when building libopenss-cli for all versions.  This mod 
+excludes that library when building the offline version of OSS.
+
+Issue 23:
+Fix compile time errors in cbtf-argonavis, where the boost:: qualifier was needed on 
+four references to uint64_t.  Consultation and fixes provided by Bill Hachfeld.
+
+Issue 24:
+Update the OpenSpeedShop convenience script man pages and add ossmpip man page.
+
+Issue 25:
+-Wall compilation revealed a number of issues with missing function prototypes and 
+format issues in various fprintf or sprintf calls.  In addition some function had 
+a missing return or used a variable that was potentially uninitialized.  This fixes 
+most of the issues.  For some of the missing prototypes, a FIXME has been addded to
+note that proper include files need to be created to provide the missing extern definitions.
+
+Issue 26:
+Fix bug where the cbtf topogology generator, on a Cray, did not compute the correct number of application nodes needed in the case where the user requested 46 ranks and to run 23 ranks on each of two nodes.
+
+Issue 27:
+When checking for MPI Implementations, first look for the CBTF_MPI_IMPLEMENTATION variable, if that is not set look at OPENSS_MPI_IMPLEMENTATION (lots of module files out in the field are setting this variable), if neither are set, then use the default_mpi variable as the mpi implementation type (one of openmpi, mpich, mvapich, mvapich2, mpt...).
+
+Issue 28:
+Add MPI asynchronous non-blocking MPI-3 standard function wrappers to cbtf-krell.  Use/see the mpi_category==async_nonblocking for just gathering performance information for just the new asynchronous non-blocking MPI-3 standard functions.  These have been tested on a number of platforms including rzmerl, a DOD cray, x8664 clusters, and desktops using the osu-micro-benchmark suite.  This work was largely done by Patrick R.
+
+Issue 29:
+Add the MPI asynchronous non-blocking MPI-3 standard functions to the ossdrivers list of MPI functions. Also, add the mpi category list of functions (mpi_async_nonblocking_traceable_functions).
+
+Issue 30:
+Fix issue with parsing srun -n options specified without a space.
+Tested by jeg.  Fix also verified not to break openmpi -n or -np
+processing (openmpi allows -n as alias for -np but does not allow
+a value without the intervening space).  Also removed cmake test
+for boost unit_test_framework in cmake configure.
+
+Issue 31:
+Add a segv handler for SIGSEGV (and SIGBUS) signals raised due to
+a failure in libunwind or our libunwind code.  If a segv is raised
+while unwinding, we are left with a short stack but usertime does
+not crash the users application.  Otherwise, segv's in the rest of
+the code will behave as normal.  This code may need to be added to
+the hwctime collector as well. I believe we added it to the old
+offline usertime collector in openspeedshop to address this issue
+for BGQ users.
+
+
+Issue n: 
+<Please report issues so that the issue to: oss-contact@krellinst.org so that it can be resolved>
+
+-------------------------------------------------------------------------------------------------
+NOTE:  Module files need to change for the CBTF based version:  HERE is and example for a cluster:
+-------------------------------------------------------------------------------------------------
+
+#%Module1.0#####################################################################
+##
+## openss modulefile
+##
+proc ModulesHelp { } {
+        global version openss
+
+        puts stderr "\topenss - loads the OpenSpeedShop software & application environment"
+        puts stderr "\n\tThis adds $oss/* to several of the"
+        puts stderr "\tenvironment variables."
+        puts stderr "\n\tVersion $version\n"
+}
+
+#  NOTE -------------------------------------------------------------
+#  The paths may need adjustment for different library naming schemes
+#  NOTE -------------------------------------------------------------
+#
+
+module-whatis   "Loads the OpenSpeedShop runtime environment."
+
+# for Tcl script use only
+set     version         2.3
+
+# Set up variables to reference later for the krell root, cbtf, and OpenSpeedShop proper
+set     root            /opt/OSS/krellroot_v2.3.1.beta1
+set     cbtf            /opt/OSS/cbtf_v2.3.1.beta1
+set     cbtfk           /opt/OSS/cbtf_v2.3.1.beta1
+set     oss             /opt/OSS/osscbtf_v2.3.1.beta1
+
+#  XPLAT_RSH is needed for MRNet which is now needed for use in CBTF
+setenv		XPLAT_RSH	ssh
+
+#  For the mpi experiments only - specify the MPI implementation of your
+#  application that will be run with OpenSpeedShop.   These are the
+#  mpi, mpit, and mpip experiments.  All other experiment types will
+#  ignore this setting.  It is only needed for mpi, mpit, and mpip.
+setenv          CBTF_MPI_IMPLEMENTATION    openmpi
+setenv          OPENSS_MPI_IMPLEMENTATION    openmpi
+
+#  This is needed if you use the --offline argument following the
+#  convenience scripts, for example:   osspcsamp --offline "mpirun -np 4 ./nbody"
+#  This is the offline mode of operation which is now built into the
+#  CBTF based version of OpenSpeedShop
+setenv          OPENSS_RAWDATA_DIR    /opt/shared
+
+# Only need these CBTF specific variables for situations where the environment is not passed
+setenv          MRNET_COMM_PATH $cbtfk/sbin/cbtf_mrnet_commnode
+setenv          CBTF_MRNET_BACKEND_PATH $cbtfk/sbin/cbtf_libcbtf_mrnet_backend
+
+# Set up the paths for the OSS/CBTF version of OpenSpeedShop
+prepend-path    PATH			$root/bin
+prepend-path    PATH			$cbtf/bin
+prepend-path    PATH			$cbtfk/sbin
+prepend-path    PATH			$cbtfk/bin
+prepend-path    PATH			$oss/bin
+prepend-path    MANPATH			$oss/share/man
+
+# Set up the dyninst runtime library path for the OSS/CBTF version of OpenSpeedShop
+# This is required for finding loops and gathering symbol table information.
+setenv DYNINSTAPI_RT_LIB $root/lib64/libdyninstAPI_RT.so
+
+# Set up the library paths for the OSS/CBTF version of OpenSpeedShop
+prepend-path LD_LIBRARY_PATH $root/lib64
+prepend-path LD_LIBRARY_PATH $cbtf/lib64
+prepend-path LD_LIBRARY_PATH $cbtfk/lib64
+prepend-path LD_LIBRARY_PATH $oss/lib64
+
+# Set up the python path so that the python scripting API can find
+# the openss python module files.
+setenv PYTHONPATH $oss/lib64/openspeedshop
+
+
