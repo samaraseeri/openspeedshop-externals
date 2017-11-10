@@ -51,6 +51,7 @@ QtGraphver=1.0.0
 omptver=20160808
 #llvm_openmpver=20170825
 llvm_openmpver=20170926
+#llvm_openmpver=D38185
 
 # OSS and CBTF versions
 openspeedshopver=2.3
@@ -583,7 +584,7 @@ function envvars() {
                                     mrnet: builds OpenSpeedShop for online instrumentation: dyninst/mrnet
             KRELL_ROOT_TARGET_ARCH      Set to the target architecture to build the Open|SpeedShop runtime environment for.
             KRELL_ROOT_PPC64_BITMODE_64 Set to indicate you want a 64 bit version of ppc64 OSS built.  Set to 1 or leave unset to indicate 32 bit build.
-            KRELL_ROOT_IMPLICIT_TLS     When set, this enables Open|SpeedShop to use implicitly created tls storage. default is implicit on x86_64 explicit on ppc64le.
+            KRELL_ROOT_IMPLICIT_TLS     When set, this enables Open|SpeedShop to use implicitly created tls storage. default is implicit on x86_64 implicit on ppc64le.
         
         -Open|SpeedShop MPI and Vampirtrace
             KRELL_ROOT_MPI_LAM          Set to MPI LAM installation dir. default is null.
@@ -1688,15 +1689,20 @@ function setup_for_oss_cbtf() {
    else
        if [ "$display_summary" = 1 ] ; then 
            if [ `uname -m` = "ppc64le" -o `uname -m` = "bgq" -o `uname -m` = "ppc64" -o `uname -m` = "bgl" ]; then
-               echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of explicit"
+               # We were going to treat ppc64le as having a need for explicit tls, but changing back to implicit for now
+               # Leaving the special checks in case we need to change back.
+               #echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of explicit"
+               echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of implicit"
            else
                echo "setting-up: KRELL_ROOT_TLS_TYPE is undefined, setting KRELL_ROOT_TLS_TYPE to default value of implicit"
            fi
        fi
 
+       # We were going to treat ppc64le as having a need for explicit tls, but changing back to implicit for now
+       # Leaving the special checks in case we need to change back.
        if [ `uname -m` = "ppc64" -o `uname -m` = "bgq" -o `uname -m` = "ppc64le" -o `uname -m` = "bgl" ]; then
-           export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=explicit"
-           export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=explicit"
+           export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=implicit"
+           export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=implicit"
        else
            export KRELL_ROOT_TLS_TYPE_PHRASE="--with-tls=implicit"
            export CMAKE_TLS_TYPE_PHRASE="-DTLS_MODEL=implicit"
