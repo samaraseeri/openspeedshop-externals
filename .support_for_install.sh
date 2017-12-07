@@ -32,11 +32,12 @@ sqlitever=3.8.4
 libmonitorver=20130218
 vampirtracever=5.3.2
 #dyninstver=20171003
-dyninstver=20171106
+dyninstver=20171128
 #dyninstver=9.3.2
 symtabapiver=8.1.2
 #mrnetver=20161003
-mrnetver=20170810
+#mrnetver=20170810
+mrnetver=20171128
 
 # Qt related versions
 qtver=3.3.8b
@@ -6213,7 +6214,7 @@ function build_dyninst_routine() {
 
    #echo "check libdwarf"
    # Find libdwarf libraries in elfutils for newer dyninst versions
-   if [ $dyninstver == "20171003" -o $dyninstver == "20171106" ]; then
+   if [ $dyninstver == "20171128" -o $dyninstver == "20171106" ]; then
        if [ ! -z $KRELL_ROOT_LIBELF ] && [ -f $KRELL_ROOT_LIBELF/$LIBDIR/libdw.so ]; then
             export LIBDWARFDIR=$KRELL_ROOT_LIBELF
             export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBELF/$LIBDIR/libdw.so
@@ -6257,7 +6258,7 @@ function build_dyninst_routine() {
    fi
 
    # Find libdwarf includes in elfutils for newer dyninst versions
-   if [ $dyninstver == "20171003" -o $dyninstver == "20171106" ]; then
+   if [ $dyninstver == "20171128" -o $dyninstver == "20171106" ]; then
        export LIBDWARFINC=$KRELL_ROOT_LIBELF/include
    elif [ $dyninstver == "9.3.2" ]; then
        if [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/include/libdwarf.h ]; then
@@ -7910,7 +7911,7 @@ function build() {
                 else
                   echo "Need alternative for rpm here - elf"
                   # Dyninst-9.3.1 and above need to use elfutils only, not libelf
-                  if [ $dyninstver == "9.3.2" -o $dyninstver == "20171003" -o $dyninstver == "20171106" ]; then
+                  if [ $dyninstver == "9.3.2" -o $dyninstver == "20171128" -o $dyninstver == "20171106" ]; then
                       if [ "$found_libz" = 0 ]; then
                           build_zlib_routine
                       fi
