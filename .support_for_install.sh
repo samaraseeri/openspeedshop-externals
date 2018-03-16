@@ -9,8 +9,7 @@ m4ver=1.4.13
 libtoolver=2.4.2
 Pythonver=2.7.3
 bisonver=3.0.2
-flexver=2.5.35
-#boostver=1_61_0
+flexver=2.6.0
 boostver=1_53_0
 xercescver=3.1.1
 launchmonver=20121010
@@ -18,25 +17,19 @@ cmakever=3.2.2
 expatver=2.1.0
 
 # Package Version Numbers
-#binutilsver=2.24
 binutilsver=2.28
 libelfver=0.8.13
 elfutilsver=0.168
 zlibver=1.2.11
 GOTCHAver=20170510
-#libdwarfver=20161124
 libdwarfver=20170416
 libunwindver=1.2.1
 papiver=5.5.1
 sqlitever=3.8.4
 libmonitorver=20130218
 vampirtracever=5.3.2
-#dyninstver=20171003
 dyninstver=20171128
-#dyninstver=9.3.2
 symtabapiver=8.1.2
-#mrnetver=20161003
-#mrnetver=20170810
 mrnetver=20171128
 
 # Qt related versions
@@ -50,15 +43,11 @@ QtGraphver=1.0.0
 
 # OMPT related versions
 omptver=20160808
-#llvm_openmpver=20170825
-llvm_openmpver=20170926
-#llvm_openmpver=D38185
+llvm_openmpver=20180301
 
 # OSS and CBTF versions
-openspeedshopver=2.3
-#cbtfver=1.8.1
-cbtfver=1.9
-#cbtfargoguiver=0.8.1
+openspeedshopver=2.3.1
+cbtfver=1.9.1
 cbtfargoguiver=1.3.0
 
 default_oss_prefix=/opt/OSS
