@@ -1,8 +1,8 @@
 #!/bin/bash
 set -x
 
-ossrel=2.3
-cbtfrel=1.9
+ossrel=2.3.1
+cbtfrel=1.9.1
 cbtfagrel=1.3.0
 QtGraphrel=1.0.0
 
@@ -98,11 +98,11 @@ gzip cbtf-argonavis-gui-${cbtfagrel}.tar
 tar -cf QtGraph-${QtGraphrel}.tar QtGraph-${QtGraphrel}/
 gzip QtGraph-${QtGraphrel}.tar
 
-rm -rf cbtf
-rm -rf cbtf-krell
-rm -rf cbtf-argonavis
-rm -rf cbtf-lanl
-rm -rf openspeedshop-${ossrel}
-rm -rf cbtf-argonavis-gui
-rm -rf QtGraph-${QtGraphrel}
+#rm -rf cbtf
+#rm -rf cbtf-krell
+#rm -rf cbtf-argonavis
+#rm -rf cbtf-lanl
+#rm -rf openspeedshop-${ossrel}
+#rm -rf cbtf-argonavis-gui
+#rm -rf QtGraph-${QtGraphrel}
 
