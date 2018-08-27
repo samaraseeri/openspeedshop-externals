@@ -10,8 +10,9 @@ libtoolver=2.4.2
 Pythonver=2.7.3
 bisonver=3.0.2
 flexver=2.6.0
-boostver=1_53_0
-xercescver=3.1.1
+boostver=1_67_0
+#xercescver=3.1.1
+xercescver=3.2.1
 launchmonver=20121010
 cmakever=3.2.2
 expatver=2.1.0
@@ -19,22 +20,25 @@ expatver=2.1.0
 # Package Version Numbers
 binutilsver=2.28
 libelfver=0.8.13
-elfutilsver=0.168
+#elfutilsver=0.168
+elfutilsver=0.173
 zlibver=1.2.11
-GOTCHAver=20170510
+#GOTCHAver=20170510
+GOTCHAver=20180524
 libdwarfver=20170416
 libunwindver=1.2.1
-papiver=5.5.1
+#libunwindver=20180817
+papiver=5.6.0
 sqlitever=3.8.4
 libmonitorver=20130218
 vampirtracever=5.3.2
-#dyninstver=20171128
-#dyninstver=20180414
-#dyninstver=20171222vc
-dyninstver=20180510vc
-#dyninstver=9.3.3
+#dyninstver=20180510vc
+#dyninstver=20180606vc
+#dyninstver=20180810
+dyninstver=20180827
 symtabapiver=8.1.2
-mrnetver=20171128
+#mrnetver=20171128
+mrnetver=20180825
 
 # Qt related versions
 qtver=3.3.8b
@@ -6217,7 +6221,7 @@ function build_dyninst_routine() {
 
    #echo "check libdwarf"
    # Find libdwarf libraries in elfutils for newer dyninst versions
-   if [ $dyninstver == "20171128" -o $dyninstver == "20180414" -o $dyninstver == "20180510vc" ]; then
+   if [ $dyninstver == "20180821vc" -o $dyninstver == "20180827" ]; then
        if [ ! -z $KRELL_ROOT_LIBELF ] && [ -f $KRELL_ROOT_LIBELF/$LIBDIR/libdw.so ]; then
             export LIBDWARFDIR=$KRELL_ROOT_LIBELF
             export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBELF/$LIBDIR/libdw.so
@@ -6261,7 +6265,7 @@ function build_dyninst_routine() {
    fi
 
    # Find libdwarf includes in elfutils for newer dyninst versions
-   if [ $dyninstver == "20171128" -o $dyninstver == "20180414" -o $dyninstver == "20180510vc" ]; then
+   if [ $dyninstver == "20180821vc" -o $dyninstver == "20180827" ]; then
        export LIBDWARFINC=$KRELL_ROOT_LIBELF/include
    elif [ $dyninstver == "9.3.2" ]; then
        if [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/include/libdwarf.h ]; then
@@ -7919,7 +7923,7 @@ function build() {
                 else
                   echo "Need alternative for rpm here - elf"
                   # Dyninst-9.3.1 and above need to use elfutils only, not libelf
-                  if [ $dyninstver == "9.3.2" -o $dyninstver == "20171128" -o $dyninstver == "20180414" -o $dyninstver == "20180510vc" ]; then
+                  if [ $dyninstver == "9.3.2" -o $dyninstver == "20180821vc" -o $dyninstver == "20180827" ]; then
                       if [ "$found_libz" = 0 ]; then
                           build_zlib_routine
                       fi
