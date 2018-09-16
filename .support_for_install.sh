@@ -32,9 +32,6 @@ papiver=5.6.0
 sqlitever=3.8.4
 libmonitorver=20130218
 vampirtracever=5.3.2
-#dyninstver=20180510vc
-#dyninstver=20180606vc
-#dyninstver=20180810
 #dyninstver=20180827
 dyninstver=20180915
 symtabapiver=8.1.2
@@ -6222,6 +6219,8 @@ function build_dyninst_routine() {
 
    #echo "check libdwarf"
    # Find libdwarf libraries in elfutils for newer dyninst versions
+   # Since we have moved on from 9.3.1 and 9.1 etc.  Only check for non-9.3.2 versions
+   # i.e. newer versions than 9.3.2 by doing a not-equal check
    if [ $dyninstver != "9.3.2" ]; then
        if [ ! -z $KRELL_ROOT_LIBELF ] && [ -f $KRELL_ROOT_LIBELF/$LIBDIR/libdw.so ]; then
             export LIBDWARFDIR=$KRELL_ROOT_LIBELF
@@ -6266,6 +6265,8 @@ function build_dyninst_routine() {
    fi
 
    # Find libdwarf includes in elfutils for newer dyninst versions
+   # Since we have moved on from 9.3.1 and 9.1 etc.  Only check for non-9.3.2 versions
+   # i.e. newer versions than 9.3.2 by doing a not-equal check
    if [ $dyninstver != "9.3.2" ]; then
        export LIBDWARFINC=$KRELL_ROOT_LIBELF/include
    elif [ $dyninstver == "9.3.2" ]; then
@@ -7924,14 +7925,12 @@ function build() {
                 else
                   echo "Need alternative for rpm here - elf"
                   # Dyninst-9.3.1 and above need to use elfutils only, not libelf
-                  #if [ $dyninstver == "9.3.2" -o $dyninstver == "20180821vc" -o $dyninstver == "20180827" ]; then
-                      if [ "$found_libz" = 0 ]; then
-                          build_zlib_routine
-                      fi
-                      build_elfutils_routine
-                  #else
-                  #    build_libelf_routine
-                  #fi
+                  # Since we have moved on from 9.3.1 and 9.1 etc.  Don't even do a 
+                  # check for what version of dyninst is used here
+                  if [ "$found_libz" = 0 ]; then
+                      build_zlib_routine
+                  fi
+                  build_elfutils_routine
 
                   if [ $KRELL_ROOT_PREFIX/$LIBDIR/libelf.so ] && [ -f $KRELL_ROOT_PREFIX/include/libelf.h -o \
                        -f $KRELL_ROOT_PREFIX/include/libelf/libelf.h ]; then
