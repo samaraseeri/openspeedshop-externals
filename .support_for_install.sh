@@ -52,8 +52,8 @@ omptver=20160808
 llvm_openmpver=20180301
 
 # OSS and CBTF versions
-openspeedshopver=2.3.1
-cbtfver=1.9.1
+openspeedshopver=2.4.0
+cbtfver=1.9.2
 cbtfargoguiver=1.3.0
 
 default_oss_prefix=/opt/OSS
