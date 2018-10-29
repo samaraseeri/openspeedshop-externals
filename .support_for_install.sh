@@ -34,6 +34,8 @@ libmonitorver=20130218
 vampirtracever=5.3.2
 #dyninstver=20180827
 dyninstver=20180915
+#dyninstver=20181023
+#dyninstver=20181026
 symtabapiver=8.1.2
 #mrnetver=20171128
 mrnetver=20180825
@@ -6051,7 +6053,7 @@ function build_boost_routine() {
            export CC=icc
            export cc=icc
            export CXX=icpc
-          ./bootstrap.sh toolset=intel --prefix=$KRELL_ROOT_BOOST --libdir=$KRELL_ROOT_BOOST/lib --includedir=$KRELL_ROOT_BOOST/include threading=multi --without-libraries=iostreams,context
+          ./bootstrap.sh --with-toolset=intel --prefix=$KRELL_ROOT_BOOST --libdir=$KRELL_ROOT_BOOST/lib --includedir=$KRELL_ROOT_BOOST/include threading=multi --without-libraries=iostreams,context
           ./b2 --prefix=$KRELL_ROOT_BOOST --libdir=$KRELL_ROOT_BOOST/lib --includedir=$KRELL_ROOT_BOOST/include link=shared toolset=intel threading=multi install
 
        else
@@ -6059,7 +6061,7 @@ function build_boost_routine() {
            export CC=gcc
            export cc=gcc
            export CXX=g++
-          ./bootstrap.sh --with-libraries=all
+          ./bootstrap.sh --with-toolset=gcc --with-libraries=all --prefix=$KRELL_ROOT_BOOST --libdir=$KRELL_ROOT_BOOST/lib --includedir=$KRELL_ROOT_BOOST/include link=shared  threading=multi
            #echo "After bootstrap.sh building and installing the boost libraries (default path-gnu) in install directory: $KRELL_ROOT_BOOST/lib with GCC"
           ./b2 --prefix=$KRELL_ROOT_BOOST --libdir=$KRELL_ROOT_BOOST/lib --includedir=$KRELL_ROOT_BOOST/include link=shared toolset=gcc threading=multi install 
        fi
@@ -6284,19 +6286,23 @@ function build_dyninst_routine() {
 
    #echo "check libiberty libdir"
    if [ ! -z $KRELL_ROOT_BINUTILS ] && [ -f $KRELL_ROOT_BINUTILS/$LIBDIR/libiberty_pic.a ]; then
-        echo "KRELL_ROOT_BINUTILS built libiberty_pic"
+        echo "KRELL_ROOT_BINUTILS built libiberty_pic in $LIBDIR"
         export LIBIBERTYLIBDIR=$KRELL_ROOT_BINUTILS/$LIBDIR
         export LIBIBERTY_LIBNAME=$KRELL_ROOT_BINUTILS/$LIBDIR/libiberty_pic.a
+   elif [ ! -z $KRELL_ROOT_BINUTILS ] && [ -f $KRELL_ROOT_BINUTILS/$ALTLIBDIR/libiberty_pic.a ]; then
+        echo "KRELL_ROOT_BINUTILS built libiberty_pic in $ALTLIBDIR"
+        export LIBIBERTYLIBDIR=$KRELL_ROOT_BINUTILS/$ALTLIBDIR
+        export LIBIBERTY_LIBNAME=$KRELL_ROOT_BINUTILS/$ALTLIBDIR/libiberty_pic.a
    elif [ ! -z $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libiberty_pic.a ]; then
-        echo "KRELL_ROOT_PREFIX built libiberty_pic"
+        echo "KRELL_ROOT_PREFIX built libiberty_pic in $LIBDIR"
         export LIBIBERTYLIBDIR=$KRELL_ROOT_PREFIX/$LIBDIR
         export LIBIBERTY_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libiberty_pic.a
    elif [ ! -z $KRELL_ROOT_BINUTILS ] && [ -f $KRELL_ROOT_BINUTILS/$LIBDIR/libiberty.a ]; then
-        echo "KRELL_ROOT_BINUTILS built libiberty"
+        echo "KRELL_ROOT_BINUTILS built libiberty in $LIBDIR"
         export LIBIBERTYLIBDIR=$KRELL_ROOT_BINUTILS/$LIBDIR
         export LIBIBERTY_LIBNAME=$KRELL_ROOT_BINUTILS/$LIBDIR/libiberty.a
    elif [ ! -z $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libiberty.a ]; then
-        echo "KRELL_ROOT_PREFIX built libiberty"
+        echo "KRELL_ROOT_PREFIX built libiberty in $LIBDIR"
         export LIBIBERTYLIBDIR=$KRELL_ROOT_PREFIX/$LIBDIR
         export LIBIBERTY_LIBNAME=$KRELL_ROOT_PREFIX/$LIBDIR/libiberty.a
    elif [ -d $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/$LIBDIR/libiberty_pic.a ]; then
@@ -10037,7 +10043,10 @@ else
 fi
 
 if [ -z $KRELL_ROOT_FORCE_BOOST_BUILD ] ; then
-   force_boost_build=0
+   # force the boost build now - dyninst requires a new
+   # boost and most systems have older versions installed
+   # was: force_boost_build=0
+   force_boost_build=1
 else
    force_boost_build=1
    build_boost=1
