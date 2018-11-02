@@ -2,49 +2,42 @@
 #
 # Build on: rzmanta at LLNL:
 
-use .adept
-#use gcc-4.9.3p
+#. /usr/share/lmod/lmod/init/bash
 
 BASE_IDIR=/collab/usr/global/tools/openspeedshop/oss-dev/power
-TOOL_VERS="_v2.3.1"
-ROOT_VERS="_v2.3.1"
-FLEX_VERS="-2.5.35"
+TOOL_VERS="_v2.4.0.dyn1030"
+ROOT_VERS="_v2.4.0.dyn1030"
+GRAPHVIZ_VERS="-2.40.1"
+QTGRAPH_VERS="-1.0.0"
+
+#FLEX_VERS="-2.5.35"
 KROOT_IDIR=${BASE_IDIR}/krellroot${ROOT_VERS}
 CBTF_IDIR=${BASE_IDIR}/cbtf${TOOL_VERS}
 OSSCBTF_IDIR=${BASE_IDIR}/osscbtf${TOOL_VERS}
 OSSOFF_IDIR=${BASE_IDIR}/ossoff${TOOL_VERS}
-LTDL_IDIR=${BASE_IDIR}/autotools${TOOL_VERS}
+LTDL_IDIR=${BASE_IDIR}/autotools${ROOT_VERS}
 FLEX_IDIR=${BASE_IDIR}/flex${FLEX_VERS}
-#MVAPICH2_IDIR=/usr/local/tools/mvapich2-gnu-1.9 
-#MVAPICH2_IDIR=/usr/local/tools/mvapich2-gnu-2.2 
-MVAPICH2_IDIR=$HOME
-#MVAPICH_IDIR=/usr/local/tools/mvapich-gnu 
-MVAPICH_IDIR=$HOME
-PYTHON_IDIR=${BASE_IDIR}/python-2.7.3 
-PYTHON_VERS=2.7
-OPENMPI_IDIR=/usr/tcetmp/packages/openmpi/openmpi-2.0.1-gcc-4.8.5-xl.13-15.1.5.0.b1_160911-gcc-4.8.5
-#OPENMPI_IDIR=/usr/local/tools/openmpi-gnu-1.4.3
+OPENMPI_IDIR=/usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2018.07.12
+CUDA_IDIR=/usr/tce/packages/cuda/cuda-9.2.88 
+CUPTI_IDIR=/usr/tce/packages/cuda/cuda-9.2.88/extras/CUPTI
+GRAPHVIZ_IDIR=${BASE_IDIR}/graphviz${GRAPHVIZ_VERS}
+QTGRAPH_IDIR=${BASE_IDIR}/QtGraph${QTGRAPH_VERS}
 
-
-# Build python
-#./install-tool --build-python --krell-root-prefix ${PTHYON_IDIR}
-#./install-tool --build-autotools --krell-root-prefix ${LTDL_IDIR}
-#./install-tool --build-flex --krell-root-prefix ${FLEX_IDIR}
-./install-tool --build-flex --krell-root-prefix ${KROOT_IDIR}
 
 # Build krellroot:
 #
-# Force binutils because make OSS usable across similar platforms w/o problem
-# of different bfd and opcode installations.  Force papi to have the latest
-# papi version available
-#
-./install-tool --build-krell-root --krell-root-prefix ${KROOT_IDIR} --force-papi-build --force-libunwind-build --with-mvapich2 ${MVAPICH2_IDIR} --with-mvapich ${MVAPICH_IDIR} --with-python ${PYTHON_IDIR} --with-python-vers ${PYTHON_VERS} --with-openmpi ${OPENMPI_IDIR}
 
-#Build cbtf using the krellroot:
-./install-tool --build-cbtf-all --cbtf-install-prefix ${CBTF_IDIR} --krell-root-prefix ${KROOT_IDIR}  --with-mvapich2 ${MVAPICH2_IDIR} --with-mvapich ${MVAPICH_IDIR} --with-python ${PYTHON_IDIR}  --with-python-vers ${PYTHON_VERS} --with-openmpi ${OPENMPI_IDIR} --with-ltdl ${LTDL_IDIR}
+#./install-tool --build-autotools --krell-root-prefix ${LTDL_IDIR}  2>&1 | tee install_tool_build_autotools_${ROOT_VERS}.log
 
-#Build the cbtf instrumentor version of OpenSpeedShop using cbtf and the krellroot:
-./install-tool --build-oss --openss-install-prefix ${OSSCBTF_IDIR} --cbtf-install-prefix ${CBTF_IDIR} --krell-root-prefix ${KROOT_IDIR}  --with-mvapich2 ${MVAPICH2_IDIR} --with-mvapich ${MVAPICH_IDIR} --with-python ${PYTHON_IDIR} --with-python-vers ${PYTHON_VERS} --with-openmpi ${OPENMPI_IDIR} --with-ltdl ${LTDL_IDIR}
+./install-tool --build-krell-root --krell-root-prefix ${KROOT_IDIR} --with-openmpi ${OPENMPI_IDIR} --with-papi	/collab/usr/global/tools/papi/blueos_3_ppc64le_ib/papi-pcp 2>&1 | tee install_tool_build_krell_root_${ROOT_VERS}.log
 
-# Build offline with krellroot
-#./install-tool --build-offline --openss-prefix ${OSSOFF_IDIR} --krell-root-prefix ${KROOT_IDIR} --with-mvapich2 ${MVAPICH2_IDIR} --with-mvapich ${MVAPICH_IDIR} --with-python ${PYTHON_IDIR} --with-python-vers ${PYTHON_VERS} --with-openmpi ${OPENMPI_IDIR}
+./install-tool --build-cbtf-all --cbtf-install-prefix ${CBTF_IDIR} --krell-root-prefix ${KROOT_IDIR}  --with-openmpi ${OPENMPI_IDIR} --with-ltdl ${LTDL_IDIR} --with-cuda ${CUDA_IDIR} --with-cupti ${CUPTI_IDIR} --with-papi  /collab/usr/global/tools/papi/blueos_3_ppc64le_ib/papi-pcp 2>&1 | tee install_tool_build_cbtf_${TOOL_VERS}.log
+
+./install-tool --build-oss --openss-install-prefix ${OSSCBTF_IDIR} --cbtf-install-prefix ${CBTF_IDIR} --krell-root-prefix ${KROOT_IDIR} --with-openmpi ${OPENMPI_IDIR} --with-ltdl ${LTDL_IDIR} --with-cuda ${CUDA_IDIR} --with-cupti ${CUPTI_IDIR} --with-papi  /collab/usr/global/tools/papi/blueos_3_ppc64le_ib/papi-pcp 2>&1 | tee install_tool_build_oss_${TOOL_VERS}.log
+
+cp /usr/tce/packages/gcc/gcc-4.9.3/gnu//lib64/libstdc++.so.6 ${KROOT_IDIR}/lib/.
+
+
+#./install-tool --build-graphviz --krell-root-prefix ${GRAPHVIZ_IDIR} 2>&1 | tee install_tool_build_graphviz.log
+#./install-tool --build-QtGraph --krell-root-prefix ${QTGRAPH_IDIR} --with-graphviz ${GRAPHVIZ_IDIR} --with-qt /usr/lib64/qt4 2>&1 | tee install_tool_build_graphlib.log
+#./install-tool --build-cbtfargonavisgui --with-openss ${OSSCBTF_IDIR} --with-cbtf ${CBTF_IDIR} --krell-root-prefix ${KROOT_IDIR} --with-graphviz ${GRAPHVIZ_IDIR} --with-QtGraph ${QTGRAPH_IDIR} --with-qt /usr/lib64/qt4 --with-boost  ${KROOT_IDIR} 2>&1 | tee install_tool_build_cbtf_argonavis_gui.log
