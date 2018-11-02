@@ -33,7 +33,8 @@ sqlitever=3.8.4
 libmonitorver=20130218
 vampirtracever=5.3.2
 #dyninstver=20180827
-dyninstver=20180915
+dyninstver=20181031
+tbbver=2018_U6
 #dyninstver=20181023
 #dyninstver=20181026
 symtabapiver=8.1.2
@@ -2517,6 +2518,118 @@ function build_zlib_routine() {
    popd
    popd
    export KRELL_ROOT_ZLIB=$KRELL_ROOT_PREFIX
+}
+
+
+function build_tbb_routine() { 
+   echo ""
+   echo "Building tbb."
+   echo ""
+   echo "The script will use $KRELL_ROOT_PREFIX/tbb as installation unless KRELL_ROOT_TBB is set."
+   echo "If KRELL_ROOT_PREFIX and KRELL_ROOT_TBB are both not set then the build script warns and halts."
+   echo ""
+
+   if [ -z $KRELL_ROOT_TBB ]; then 
+        echo "   "
+        echo "         KRELL_ROOT_TBB is NOT set."
+        echo "   "
+	if [ $KRELL_ROOT_PREFIX ]; then
+         echo "   "
+ 	  echo "         Using KRELL_ROOT_PREFIX=$KRELL_ROOT_PREFIX"
+          export KRELL_ROOT_TBB=$KRELL_ROOT_PREFIX
+          echo "         Using KRELL_ROOT_TBB based on KRELL_ROOT_PREFIX, KRELL_ROOT_TBB=$KRELL_ROOT_TBB"
+          echo "   "
+	else
+          echo "   "
+          echo "    PROBLEM: The installation path environment variables: KRELL_ROOT_PREFIX"
+          echo "             and KRELL_ROOT_TBB are not set.  "
+          echo "             If KRELL_ROOT_PREFIX is set then KRELL_ROOT_PREFIX will be used for"
+          echo "             KRELL_ROOT_TBB."
+          echo "   "
+          echo "    PLEASE SET KRELL_ROOT_PREFIX OR KRELL_ROOT_TBB and restart the install script.  Thanks."
+          echo "   "
+          exit
+        fi
+   else
+      echo "   "
+      echo "         KRELL_ROOT_TBB was set."
+      echo "         Using KRELL_ROOT_TBB=$KRELL_ROOT_TBB"
+      echo "   "
+   fi
+
+   echo 
+   echo "Continue the build process for the tbb root? <y/n>"
+   echo
+
+   #echo "nanswer inside build_tbb is:$nanswer"
+   if [ "$nanswer" = 9 ]; then
+       echo
+       echo "Continuing the tbb build process."
+       echo
+   else
+      #read answer
+      answer=Y
+   fi
+  
+   if [ "$answer" = Y -o "$answer" = y ]; then
+       echo
+       echo "Continuing the tbb build process."
+       echo 
+   elif [ "$nanswer" = 9 ]; then
+       echo 
+   else
+       echo "   "
+       exit
+   fi
+
+   if [ -z $LD_LIBRARY_PATH ]; then 
+
+     if [ $KRELL_ROOT_TBB ]; then 
+         export LD_LIBRARY_PATH=$KRELL_ROOT_TBB/lib
+     fi
+   else
+     if [ $KRELL_ROOT_TBB ]; then 
+         export LD_LIBRARY_PATH=$KRELL_ROOT_TBB/lib:$LD_LIBRARY_PATH
+     fi
+   fi
+
+   if [ -z $PATH ]; then 
+     if [ $KRELL_ROOT_TBB ]; then 
+         export PATH=$KRELL_ROOT_TBB/bin:$PATH
+     fi
+   else
+     if [ $KRELL_ROOT_TBB ]; then 
+         export PATH=$KRELL_ROOT_TBB/bin:$PATH
+     fi
+   fi
+
+   # tbb
+   cd $build_root_home
+   mkdir -p BUILD
+   mkdir -p BUILD/$sys
+   mkdir -p BUILD/$sys/tbb
+   mkdir -p BUILD/$sys/tbb/src
+   mkdir -p BUILD/$sys/tbb/src/TBB-build
+   rm -rf BUILD/$sys/tbb-$tbbver.tar.gz
+   rm -rf BUILD/$sys/tbb-$tbbver
+   cp SOURCES/tbb-$tbbver.tar.gz BUILD/$sys/tbb-$tbbver.tar.gz
+   pushd BUILD/$sys
+   tar -xzf tbb-$tbbver.tar.gz
+   pushd tbb-$tbbver
+   mkdir -p  ${KRELL_ROOT_PREFIX}/tbb
+   mkdir -p ${KRELL_ROOT_PREFIX}/tbb/include
+   mkdir -p ${KRELL_ROOT_PREFIX}/tbb/lib
+   build_location=tbb/src/TBB-build
+   cc="gcc" CC="gcc" CXX="g++" make tbb tbbmalloc tbb_build_dir=$build_location tbb_build_prefix=tbb 
+   echo "cp $build_root_home/BUILD/$sys/tbb-$tbbver/tbb/src/TBB-build/tbb_release/*.so* ${KRELL_ROOT_PREFIX}/tbb/lib"
+   cp $build_root_home/BUILD/$sys/tbb-$tbbver/tbb/src/TBB-build/tbb_release/*.so* ${KRELL_ROOT_PREFIX}/tbb/lib
+   echo "cp -r $build_root_home/BUILD/$sys/tbb-$tbbver/include/* ${KRELL_ROOT_PREFIX}/tbb/include"
+   cp -r $build_root_home/BUILD/$sys/tbb-$tbbver/include/* ${KRELL_ROOT_PREFIX}/tbb/include
+   popd
+   popd
+   export KRELL_ROOT_TBB=$KRELL_ROOT_PREFIX
+   export TBB_INCLUDE_DIRS=${KRELL_ROOT_TBB}/tbb/include
+   export TBB_LIBRARIES="${KRELL_ROOT_TBB}/tbb/lib ${KRELL_ROOT_TBB}/tbb/lib/libtbbmalloc_proxy.so"
 }
 
 # Main Build Function
@@ -6358,6 +6471,43 @@ function build_dyninst_routine() {
         export LIBIBERTY_LIBNAME=/usr/$LIBDIR/libiberty.a
    fi
 
+   if [ -d $KRELL_ROOT_PREFIX/tbb ] && [ -f $KRELL_ROOT_PREFIX/tbb/lib/libtbb.so ]; then
+         echo "found TBB, in $KRELL_ROOT_PREFIX/tbb"
+         export TBBROOT=${KRELL_ROOT_PREFIX}/tbb/include
+         export TBB_INSTALL_DIR=${KRELL_ROOT_PREFIX}/tbb/lib
+         export TBB_ROOT_DIR=${KRELL_ROOT_PREFIX}/tbb/lib
+         export TBB_INCLUDE_DIR=${KRELL_ROOT_PREFIX}/tbb/include
+         export TBB_LIBRARY=${KRELL_ROOT_PREFIX}/tbb/lib
+         export TBB_FOUND=1
+         export TBB_INCLUDE_DIRS=${KRELL_ROOT_PREFIX}/tbb/include
+         export TBB_LIBRARIES="${KRELL_ROOT_PREFIX}/tbb/lib/libtbb.so ${KRELL_ROOT_PREFIX}/tbb/lib/libtbbmalloc_proxy.so"
+         echo "TBB_LIBRARIES=${TBB_LIBRARIES}"
+         echo "TBB_INCLUDE_DIRS=${TBB_INCLUDE_DIRS}"
+   elif [ -d /usr/$LIBDIR ] && [ -f /usr/$LIBDIR/libtbb.so ]; then
+         echo "found TBB, in /usr"
+         export TBBROOT=/usr/include
+         export TBB_INSTALL_DIR=/usr/$LIBDIR
+         export TBB_ROOT_DIR=/usr/$LIBDIR
+         export TBB_INCLUDE_DIR=/usr/include
+         export TBB_LIBRARY=/usr/$LIBDIR
+         export TBB_INCLUDE_DIRS=/usr/include/tbb/include
+         export TBB_LIBRARIES="/usr/$LIBDIR/libtbb.so /usr/$LIBDIR/libtbbmalloc_proxy.so"
+         echo "TBB_LIBRARIES=${TBB_LIBRARIES}"
+         echo "TBB_INCLUDE_DIRS=${TBB_INCLUDE_DIRS}"
+   elif [ -d /usr/$ALTLIBDIR ] && [ -f /usr/$ALTLIBDIR/libtbb.so ]; then
+         echo "found TBB, in /usr, alt"
+         export TBBROOT=/usr/include
+         export TBB_INSTALL_DIR=/usr/$ALTLIBDIR
+         export TBB_ROOT_DIR=/usr/$ALTLIBDIR
+         export TBB_INCLUDE_DIR=/usr/include
+         export TBB_LIBRARY=/usr/$ALTLIBDIR
+         export TBB_INCLUDE_DIRS=/usr/include/tbb/include
+         export TBB_LIBRARIES="/usr/$ALTLIBDIR/libtbb.so /usr/$ALTLIBDIR/libtbbmalloc_proxy.so"
+         echo "TBB_LIBRARIES=${TBB_LIBRARIES}"
+         echo "TBB_INCLUDE_DIRS=${TBB_INCLUDE_DIRS}"
+   fi
+   
+
    if [ "$build_with_intel" = 1 ]; then
        export cc=icc
        export CXX=icpc
@@ -8818,6 +8968,18 @@ function build() {
 	    read answer
 	fi
 
+        # Build TBB, if not available.  Note: dyninst expects tbb to be built into /lib not /lib64
+	if [ -f /usr/$LIBDIR/tbb/libtbb.so ] && [ -f /usr/include/tbb/parallel_sort.h ] ; then
+	   echo "SKIPPING tbb build, tbb is installed on system."
+	elif [ -f /usr/$ALTLIBDIR/tbb/libtbb.so ] && [ -f /usr/include/tbb/parallel_sort.h ] ; then
+	   echo "SKIPPING tbb build, tbb is installed on system,alt."
+        elif [ -f $KRELL_ROOT_PREFIX/tbb/lib/libtbb.so ] && [ $KRELL_ROOT_PREFIX/tbb/include/tbb/parallel_sort.h ] ; then
+	   echo "SKIPPING tbb build, tbb is installed in krellroot on this system."
+        else
+	   echo "Installing tbb, tbb is required for building the newest dyninst versions."
+           build_tbb_routine
+	fi
+
 	echo "Dyninst build, BEFORE CHECKS."
         if [ "$KRELL_ROOT_TARGET_ARCH" == "mic" ] ; then
 	       skip_dyninst_build=1
@@ -10374,6 +10536,9 @@ while [ $# -gt 0 ]; do
             exit;;
        --flex)
             build_flex_routine
+            exit;;
+       --tbb)
+            build_tbb_routine
             exit;;
        --boost-headers)
             build_boost=1

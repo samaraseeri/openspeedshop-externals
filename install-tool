@@ -593,6 +593,11 @@ do
             shift
 	    ;;
 
+       --build-tbb)
+	    build_tbb="--build-tbb"
+            shift
+	    ;;
+
        --build-dyninst)
 	    build_dyninst="--dyninst"
             shift
@@ -1818,6 +1823,10 @@ if [ -z $KRELL_ROOT_TARGET_ARCH ] || [ $is_cray_target == 1 ] || [ $is_bg_target
   elif [ "$build_zlib" == "--build-zlib" ]; then
 
     ./.support_for_install.sh $build_zlib
+
+  elif [ "$build_tbb" == "--build-tbb" ]; then
+
+    ./.support_for_install.sh $build_tbb
 
   elif [ "$build_ptgfall" == "--build-ptgfall" ]; then
 
