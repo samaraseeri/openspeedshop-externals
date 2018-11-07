@@ -7600,7 +7600,7 @@ function build_openspeedshop_routine() {
    pushd openspeedshop-$openspeedshopver
 
    if [ -f ${build_root_home}/SOURCES/openspeedshop-$openspeedshopver.patch ]; then
-      patch -p1 < ${build_root_home}/SOURCES/openspeedshop-$openspeedshopver.patch
+      patch -p0 < ${build_root_home}/SOURCES/openspeedshop-$openspeedshopver.patch
    fi
  
 
