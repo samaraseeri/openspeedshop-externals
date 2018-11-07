@@ -1,0 +1,45 @@
+diff --git a/dyninstAPI/src/function.C b/dyninstAPI/src/function.C
+index 301b572..fcc5948 100644
+--- a/dyninstAPI/src/function.C
++++ b/dyninstAPI/src/function.C
+@@ -1737,3 +1737,22 @@ void func_instance::freeStackMod() {
+     if (ce != NULL) delete ce;
+ }
+ #endif
++
++string func_instance::symTabName() const { 
++    if (_powerPreambleFunc) 
++        return _powerPreambleFunc->ifunc()->symTabName(); 
++    return ifunc()->symTabName(); 
++}
++
++string func_instance::prettyName() const { 
++    if (_powerPreambleFunc) 
++        return _powerPreambleFunc->ifunc()->prettyName(); 
++    return ifunc()->prettyName(); 
++}
++
++string func_instance::typedName() const { 
++    if (_powerPreambleFunc) 
++        return _powerPreambleFunc->ifunc()->typedName(); 
++    return ifunc()->typedName(); 
++}
++
+diff --git a/dyninstAPI/src/function.h b/dyninstAPI/src/function.h
+index 13e6581..23e7b39 100644
+--- a/dyninstAPI/src/function.h
++++ b/dyninstAPI/src/function.h
+@@ -100,9 +100,9 @@ class func_instance : public patchTarget, public Dyninst::PatchAPI::PatchFunctio
+   // this function) we make most methods passthroughs to the original
+   // parsed version.
+ 
+-  string symTabName() const { return ifunc()->symTabName(); };
+-  string prettyName() const { return ifunc()->prettyName(); };
+-  string typedName() const { return ifunc()->typedName(); };
++  string symTabName() const; 
++  string prettyName() const;
++  string typedName() const;
+   string name() const { return symTabName(); }
+ 
+   SymtabAPI::Aggregate::name_iter symtab_names_begin() const 
+
