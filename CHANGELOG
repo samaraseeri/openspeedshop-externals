@@ -1,4 +1,331 @@
 
+This represents a new OpenSpeedShop-2.4.0 release.
+
+FEATURE 1:
+
+One of the main features added is the cbtfsummary high-level performance experiment.
+The cbtfsummary experiment is designed to work on sequential, MPI, OpenMP, and hybrid
+codes and directly leverages several interfaces available for tools inside current MPI
+implementations like, MVAPICH and OpenMPI. The goal is to provide its user with a high-level
+view of the performance of their application.
+The cbtfsummary experiment gathers high-level information for a number of performance metrics,
+such as:
+* Host, rank, thread, application meta-data
+* Time spent in MPI routines
+* Time spent in OpenMP (idle time, barrier time, task time)
+* Hardware counters (multiplexes HW counters)
+* Time spent in I/O (breaks down read and write times and byte totals)
+* Memory information
+    o Allocation calls, bytes, and time
+    o Free calls and time
+    o PAPI dmem and statistics including high water mark
+    o rusage max rss
+* rusage utime and stime
+
+The cbtfsummary experiment outputs a report in human readable form, in addition to the csv files that
+are created when cbtfsummary is finished running. To generate the initial csv files, a final .txt report
+file (report is also printed to stdout), and a master csv file (a concatenation of all the individual csv
+files), the following command is used:
+cbtfsummary “how you run your application normally”
+For example, with MPI:
+cbtsummary “mpirun –np <number of ranks> <application><application arguments>"
+
+FEATURE 2:
+
+The original effort was to detect Intel instructions that have 512 vector length arguments, i.e. AVX512 instructions.   
+We broadened the original objective and now detect vector instructions in general and can report vector instructions 
+of various vector lengths , where AVX512 is a special case of the general detection.   This gives the Open|SpeedShop 
+tool flexibility to handle possible future architectural changes and report more categories for existing systems.
+This functionality was implemented by using the gathered/sampled addresses to search through the executable during 
+post processing the executable using the Dyninst API.   The sampled addresses, which were gathered during the 
+application execution, are matched with instruction at that address .  The instruction must be one that is in the 
+Dyninst vector category.  The operands are examined for their size and the largest size is recorded and subsequently 
+reporting in the Open|SpeedShop CLI.    The new view is displayed via the “expview -vvectorinstr”.
+This work was developed and tested on a number of machines including three KNL platforms and various  laboratory x86_64 platforms.
+There is no special options to gather this information.   The vector instructions will be detected if they are present on 
+Intel based plaforms.
+Here is a short example of the output.   Note the same default view metrics are shown along with the instruction 
+mnemonics, instruction address, and the maximum size of the operands for the instruction.
+
+dgemm application:
+
+openss -cli -f dgemm_onyx_knl-pcsamp-2.openss
+openss>>[openss]: The restored experiment identifier is:  -x 1
+openss>>expview -vvectorinstr
+
+Exclusive   % of CPU  Vector Instr Location (Line Number/Addr : OpCode  : Max Operand Size (bits))
+ CPU time       Time  
+       in             
+ seconds.             
+ 0.460000  10.874704  0x20001f94 (run : dgemm_onyx_knl) : dgemm.c(188) : movsd %xmm8,0x0(%rsp,%rsi,8) : 128
+ 0.450000  10.638298  0x20001f8e (run : dgemm_onyx_knl) : dgemm.c(187) : movsd %xmm8,0x0(%rdi,%rsi,8) : 128
+ 0.380000   8.983452  0x20001f50 (run : dgemm_onyx_knl) : dgemm.c(187) : vcvtsi2sd 0xffffffffffffffe0(%rbp),%xmm0 : 128
+ 0.360000   8.510638  0x200014e9 (main : dgemm_onyx_knl) : dgemm.c(187) : vcvtsi2sd 0xffffffffffffffe8(%rbp),%xmm0 : 128
+ 0.240000   5.673759  0x20001527 (main : dgemm_onyx_knl) : dgemm.c(187) : movsd %xmm8,0x0(%rsp,%rbp,8) : 128
+ 0.230000   5.437352  0x2000151b (main : dgemm_onyx_knl) : dgemm.c(187) : vfmadd231sd %xmm4,%xmm5,%xmm6{%k0} : 128
+ 0.220000   5.200946  0x20001521 (main : dgemm_onyx_knl) : dgemm.c(187) : vmaskmovpd %xmm6,%xmm7,%xmm8{%k0} : 128
+ 0.190000   4.491726  0x2000152d (main : dgemm_onyx_knl) : dgemm.c(188) : movsd %xmm8,0x0(%rdi,%rbp,8) : 128
+ 0.180000   4.255319  0x20001f9a (run : dgemm_onyx_knl) : dgemm.c(189) : movsd %xmm8,0x0(%rbp,%rsi,8) : 128
+ 0.170000   4.018913  0x20001f55 (run : dgemm_onyx_knl) : dgemm.c(187) : vmovsd %xmm0,0xffffffffffffffd0(%rbp),%xmm2 : 128
+ 0.170000   4.018913  0x20001f88 (run : dgemm_onyx_knl) : dgemm.c(187) : vmaskmovpd %xmm6,%xmm7,%xmm8{%k0} : 128
+ 0.170000   4.018913  0x200014ee (main : dgemm_onyx_knl) : dgemm.c(187) : vmovsd %xmm0,0xffffffffffffffd8(%rbp),%xmm2 : 128
+ 0.170000   4.018913  0x20001f77 (run : dgemm_onyx_knl) : dgemm.c(187) : vsubsd %xmm1,0xffffffffffffffc0(%rbp),%xmm7 : 128
+ 0.160000   3.782506  0x200014fa (main : dgemm_onyx_knl) : dgemm.c(187) : vmovsd %xmm0,0xffffffffffffffd0(%rbp),%xmm3 : 128
+ 0.160000   3.782506  0x20001f61 (run : dgemm_onyx_knl) : dgemm.c(187) : vmovsd %xmm0,0xffffffffffffffc8(%rbp),%xmm3 : 128
+ 0.150000   3.546099  0x20001f82 (run : dgemm_onyx_knl) : dgemm.c(187) : vfmadd231sd %xmm4,%xmm5,%xmm6{%k0} : 128
+ 0.080000   1.891253  0x20001510 (main : dgemm_onyx_knl) : dgemm.c(187) : vsubsd %xmm1,0xffffffffffffffc0(%rbp),%xmm7 : 128
+ 0.060000   1.418440  0x20001533 (main : dgemm_onyx_knl) : dgemm.c(189) : movsd %xmm8,0x0(%rsi,%rbp,8) : 128
+ 0.030000   0.709220  0x20001f66 (run : dgemm_onyx_knl) : dgemm.c(187) : vgetexpsd %xmm0,%xmm0,%xmm1{%k0} : 128
+ 0.030000   0.709220  0x200014f3 (main : dgemm_onyx_knl) : dgemm.c(187) : vgetmantss %xmm0,%xmm0,0,%xmm4{%k0} : 128
+ 0.020000   0.472813  0x20001515 (main : dgemm_onyx_knl) : dgemm.c(187) : vfnmsub231sd %xmm6,%xmm3,%xmm4{%k0} : 128
+ 0.020000   0.472813  0x200014ff (main : dgemm_onyx_knl) : dgemm.c(187) : vgetexpsd %xmm0,%xmm0,%xmm1{%k0} : 128
+ 0.020000   0.472813  0x2000150a (main : dgemm_onyx_knl) : dgemm.c(187) : vmulsd %xmm2,%xmm4,%xmm6{%k0} : 128
+ 0.010000   0.236407  0x00002aaae0b59284 (mkl_blas_avx512_mic_dgemm_dcopy_down8_ea : libmkl_avx512_mic.so) : movupd %zmm0,0x5(%rcx){%k0} : 512
+ 0.010000   0.236407  0x00002aaae0b591f6 (mkl_blas_avx512_mic_dgemm_dcopy_down8_ea : libmkl_avx512_mic.so) : movupd %zmm0,0x1(%rcx){%k0} : 512
+ 0.010000   0.236407  0x00002aaae0b5923c (mkl_blas_avx512_mic_dgemm_dcopy_down8_ea : libmkl_avx512_mic.so) : movupd %zmm0,0x3(%rcx){%k0} : 512
+ 0.010000   0.236407  0x00002aaae0b59260 (mkl_blas_avx512_mic_dgemm_dcopy_down8_ea : libmkl_avx512_mic.so) : movupd %zmm0,0x4(%rcx){%k0} : 512
+ 0.010000   0.236407  0x00002aaae0b5927c (mkl_blas_avx512_mic_dgemm_dcopy_down8_ea : libmkl_avx512_mic.so) : vmovupd %zmm0,0xfffffffffffffffe(%rax,%rbx,1),%zmm0{%k0} : 512
+ 0.010000   0.236407  0x200014e5 (main : dgemm_onyx_knl) : dgemm.c(187) : vxorpd %xmm0,%xmm0,%xmm0 : 128
+ 0.010000   0.236407  0x00002aaae0b59184 (mkl_blas_avx512_mic_dgemm_dcopy_down8_ea : libmkl_avx512_mic.so) : vmovupd %zmm0,0xfffffffffffffffe(%rdx),%zmm0{%k0} : 512
+ 0.010000   0.236407  0x20001f7c (run : dgemm_onyx_knl) : dgemm.c(187) : vfnmsub231sd %xmm6,%xmm3,%xmm4{%k0} : 128
+ 0.010000   0.236407  0x20001f71 (run : dgemm_onyx_knl) : dgemm.c(187) : vmulsd %xmm2,%xmm4,%xmm6{%k0} : 128
+ 0.010000   0.236407  0x20001f5a (run : dgemm_onyx_knl) : dgemm.c(187) : vgetmantss %xmm0,%xmm0,0,%xmm4{%k0} : 128
+ 0.010000   0.236407  0x20001f4c (run : dgemm_onyx_knl) : dgemm.c(187) : vxorpd %xmm0,%xmm0,%xmm0 : 128
+openss>>   
+
+
+FEATURE 3:
+
+Update the O|SS/CBTF build mechanisms to use the new SPACK support for the Cray platform and other non-generic platforms.  
+Additional SPACK features are currently being developed to support building applications and tools on the Cray platform.  
+We used those new SPACK features to adapt the current O|SS/CBTF spack package files to support 
+building on the Cray platform while focusing on the Trinity platform.
+
+FEATURE 4:
+
+Turn off loop detection and vector instruction detection
+by default and add options to the convenience scripts that
+allows users to turn on loop detection and vector instruction
+detection when desired.
+
+The new options are as follows:
+# Enable the executable post-processing for loop detection
+      --loops)
+# Disable the executable post-processing for loop detection
+       --noloops)
+# Enable the executable post-processing for vector instruction
+# detection for instructions with 128 bit or larger operands
+       --vinstr128)
+# Enable the executable post-processing for vector instruction
+# detection for instructions with 256 bit or larger operands
+       --vinstr256)
+# Enable the executable post-processing for vector instruction
+# detection for instructions with 512 bit or larger operands
+       --vinstr512)
+
+Also add help documentation in the convenience scripts
+so users are aware of the options.  Provide messages when
+the scripts are running, so users are are that detection
+is on or off.
+
+FEATURE 5:
+
+Better inline support for C++ - trying to help Kokkos and RAJA developers, as well
+as better general C++ inline reporting.
+
+The example call-stack below is from lulesh2.0.3 and was run on  grizzley at LANL.  This call-stack 
+illustrates the relationship between the function doing the inlining function and the inlined functions.  
+The call-stack below chains together the inlined functions as they occurred in the execution of the 
+program based on sampling information collected by O|SS.   Note that the inlined and inlining 
+function have the same number of indentation arrows to indicate the occurrence of inlining.
+
+This call-stack is one of the many that were collected and displayed by the usertime experiment:
+
+           _start (lulesh2.0)
+           > @ 556 in __libc_start_main (libmonitor.so.0.0.0)
+           >> @ 274 in __libc_start_main (libc-2.17.so)
+           >>> @ 517 in monitor_main (libmonitor.so.0.0.0)
+           >>>> @ 183 in main (lulesh2.0: lulesh.cc,2690)
+           >>>> @ 2774 in LagrangeLeapFrog (lulesh2.0: lulesh.cc)
+           >>>> @ 2656 in LagrangeElements (lulesh2.0: lulesh.cc)
+           >>>> @ 2458 in CalcLagrangeElements (lulesh2.0: lulesh.cc)
+           >>>> @ 1609 in CalcKinematicsForElems (lulesh2.0: lulesh.cc)
+           >>>>> @ 2374 in __kmp_join_call (libomp.so)
+           >>>>>> @ 7165 in __kmp_internal_join (libomp.so)
+           >>>>>>> @ 334 in __kmp_join_barrier(int) (libomp.so)
+    89  >>>>>>>> @ 167 in OMPT_THREAD_WAIT_BARRIER (collector.c,167)
+       
+       The chain of events that are illustrated above:
+       At line 2774 of lulesh.cc,  LagrangeLeapFrog was inlined.
+       At line 2656 in LagrangeLeapFrog,  LagrangeElements was inlined
+       At line 2458 in  LagrangeElements, CalcLagrangeElements was inlined
+       At line 1609 in CalcLagrangeElements, CalcKinematicsForElems was inlined
+       
+       Source excerpts from lulesh.cc from lulesh2.0.3:
+         1598	/******************************************/
+         1599	
+         1600	static inline
+         1601	void CalcLagrangeElements(Domain& domain, Real_t* vnew)
+         1602	{
+         1603	   Index_t numElem = domain.numElem() ;
+         1604	   if (numElem > 0) {
+         1605	      const Real_t deltatime = domain.deltatime() ;
+         1606	
+         1607	      domain.AllocateStrains(numElem);
+         1608	
+         1609	      CalcKinematicsForElems(domain, vnew, deltatime, numElem) ;
+         1610	
+         1611	      // element loop to do some stuff not included in the elemlib function.
+         1612	#pragma omp parallel for firstprivate(numElem)
+         1613	      for ( Index_t k=0 ; k<numElem ; ++k )
+         1614	      {
+         1615	         // calc strain rate and apply as constraint (only done in FB element)
+       …
+       …
+       
+         1634	      }
+         1635	      domain.DeallocateStrains();
+         1636	   }
+         1637	}
+         1638	
+       
+       
+         2451	/******************************************/
+         2452	
+         2453	static inline
+         2454	void LagrangeElements(Domain& domain, Index_t numElem)
+         2455	{
+         2456	  Real_t *vnew = Allocate<Real_t>(numElem) ;  /* new relative vol -- temp */
+         2457	
+         2458	  CalcLagrangeElements(domain, vnew) ;
+         2459	
+         2460	  /* Calculate Q.  (Monotonic q option requires communication) */
+         2461	  CalcQForElems(domain, vnew) ;
+         2462	
+         2463	  ApplyMaterialPropertiesForElems(domain, vnew) ;
+         2464	
+         2465	  UpdateVolumesForElems(domain, vnew,
+         2466	                        domain.v_cut(), numElem) ;
+         2467	
+         2468	  Release(&vnew);
+         2469	}
+         2470	
+       
+         2638	
+         2639	static inline
+         2640	void LagrangeLeapFrog(Domain& domain)
+         2641	{
+         2642	#ifdef SEDOV_SYNC_POS_VEL_LATE
+         2643	   Domain_member fieldData[6] ;
+         2644	#endif
+         2645	
+         2646	   /* calculate nodal forces, accelerations, velocities, positions, with
+         2647	    * applied boundary conditions and slide surface considerations */
+         2648	   LagrangeNodal(domain);
+         2649	
+         2650	
+         2651	#ifdef SEDOV_SYNC_POS_VEL_LATE
+         2652	#endif
+         2653	
+         2654	   /* calculate element quantities (i.e. velocity gradient & q), and update
+         2655	    * material states */
+         2656	   LagrangeElements(domain, domain.numElem());
+         2657	
+         2658	#if USE_MPI   
+         2659	#ifdef SEDOV_SYNC_POS_VEL_LATE
+         2660	   CommRecv(domain, MSG_SYNC_POS_VEL, 6,
+         2661	            domain.sizeX() + 1, domain.sizeY() + 1, domain.sizeZ() + 1,
+         2662	            false, false) ;
+         2663	
+         2664	   fieldData[0] = &Domain::x ;
+         2665	   fieldData[1] = &Domain::y ;
+         2666	   fieldData[2] = &Domain::z ;
+         2667	   fieldData[3] = &Domain::xd ;
+         2668	   fieldData[4] = &Domain::yd ;
+         2669	   fieldData[5] = &Domain::zd ;
+         2670	   
+         2671	   CommSend(domain, MSG_SYNC_POS_VEL, 6, fieldData,
+         2672	            domain.sizeX() + 1, domain.sizeY() + 1, domain.sizeZ() + 1,
+         2673	            false, false) ;
+         2674	#endif
+         2675	#endif   
+         2676	
+         2677	   CalcTimeConstraintsForElems(domain);
+         2678	
+         2679	#if USE_MPI   
+         2680	#ifdef SEDOV_SYNC_POS_VEL_LATE
+         2681	   CommSyncPosVel(domain) ;
+         2682	#endif
+         2683	#endif   
+         2684	}
+         2685	
+         2686	
+       
+       
+         2687	/******************************************/
+         2688	
+         2689	int main(int argc, char *argv[])
+         2690	{
+         2691	  Domain *locDom ;
+         2692	   Int_t numRanks ;
+         2693	   Int_t myRank ;
+         2694	   struct cmdLineOpts opts;
+         2695	
+         2696	#if USE_MPI   
+         2697	   Domain_member fieldData ;
+         2698	
+       …
+       …
+       
+         2770	//      std::cout << "region" << i + 1<< "size" << locDom->regElemSize(i) <<std::endl;
+         2771	   while((locDom->time() < locDom->stoptime()) && (locDom->cycle() < opts.its)) {
+         2772	
+         2773	      TimeIncrement(*locDom) ;
+         2774	      LagrangeLeapFrog(*locDom) ;
+         2775	
+         2776	      if ((opts.showProg != 0) && (opts.quiet == 0) && (myRank == 0)) {
+         2777	         printf("cycle = %d, time = %e, dt=%e\n",
+         2778	                locDom->cycle(), double(locDom->time()), double(locDom->deltatime()) ) ;
+         2779	      }
+         2780	   }
+       
+Specific Kokkos Example:
+BEFORE changes to better support C++ inlining – top time taking callstack from kokkos-mxm.host:
+
+       openss>>expview -vfullstack -mcalls usertime1
+       
+       Number of  Call Stack Function (defining location)
+       Exclusive  
+          Counts  
+                  _start (kokkos-mxm.host)
+                  > @ 556 in __libc_start_main (libmonitor.so.0.0.0: main.c,541)
+                  >>__libc_start_main (libc-2.26.so)
+                  >>> @ 517 in monitor_main (libmonitor.so.0.0.0: main.c,492)
+                  >>>> @ 131 in main (kokkos-mxm.host: kokkos-mxm.cpp,3)
+                  >>>>> @ 1168 in __kmp_api_GOMP_parallel (libomp.so: kmp_gsupport.cpp,1136)
+         158  >>>>>> @ 91 in Kokkos::Impl::ParallelFor<main::{lambda(int const&)#2}, Kokkos::RangePolicy<Kokkos::OpenMP>, Kokkos::RangePolicy>::execute() const [clone ._omp_fn.2] (kokkos-mxm.host: Kokkos_OpenMP_Parallel.hpp,131)
+       
+AFTER changes to better support C++ inlining – top time taking callstack from kokkos-mxm.host:
+       
+       openss>>expview -v fullstack -mcalls usertime1
+       
+       Number of  Call Stack Function (defining location)
+       Exclusive  
+          Counts  
+
+           _start (kokkos-mxm.host)
+           > @ 556 in __libc_start_main (libmonitor.so.0.0.0)
+           >>__libc_start_main (libc-2.26.so)
+           >>> @ 517 in monitor_main (libmonitor.so.0.0.0)
+           >>>> @ 3 in main (kokkos-mxm.host: kokkos-mxm.cpp,3)
+           >>>> @ 244 in parallel_for<main(int, char**)::<lambda(int const&)> > (kokkos-mxm.host: Kokkos_Parallel.hpp)
+           >>>> @ 224 in execute (kokkos-mxm.host: Kokkos_Parallel.hpp)
+           >>>> @ 20 in parallel_for<int, main(int, char**)::<lambda(int const&)> > (kokkos-mxm.host: kokkos-mxm.cpp)
+           >>>>> @ 1168 in __kmp_api_GOMP_parallel (libomp.so)
+  138  >>>>>> @ 91 in Kokkos::Impl::ParallelFor<main::{lambda(int const&)#2}, Kokkos::RangePolicy<Kokkos::OpenMP>, Kokkos::RangePolicy>::execute() const [clone ._omp_fn.2] (kokkos-mxm.host: Kokkos_OpenMP_Parallel.hpp,131)
+         
+       
+
 This represents a new OpenSpeedShop-2.3.1 release.
 
 ---------------------------------------------------------------------
