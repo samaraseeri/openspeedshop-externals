@@ -1,8 +1,8 @@
 #!/bin/bash
 
 BASE_DIR=/opt/OSS/rel
-TOOL_VERS="_v2.3.1.release"
-ROOT_VERS="_v2.3.1.release"
+TOOL_VERS="_v2.4.0.release"
+ROOT_VERS="_v2.4.0.release"
 GRAPHVIZ_VERS="-2.40.1"
 QTGRAPH_VERS="-1.0.0"
 
