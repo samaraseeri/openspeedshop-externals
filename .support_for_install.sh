@@ -20,25 +20,19 @@ expatver=2.1.0
 # Package Version Numbers
 binutilsver=2.28
 libelfver=0.8.13
-#elfutilsver=0.168
 elfutilsver=0.173
 zlibver=1.2.11
-#GOTCHAver=20170510
 GOTCHAver=20180524
 libdwarfver=20170416
 libunwindver=1.2.1
-#libunwindver=20180817
 papiver=5.6.0
 sqlitever=3.8.4
 libmonitorver=20130218
 vampirtracever=5.3.2
-#dyninstver=20180827
-dyninstver=20181031
+#dyninstver=20181108
+dyninstver=10.0.0
 tbbver=2018_U6
-#dyninstver=20181023
-#dyninstver=20181026
 symtabapiver=8.1.2
-#mrnetver=20171128
 mrnetver=20180825
 
 # Qt related versions
@@ -6336,7 +6330,7 @@ function build_dyninst_routine() {
    # Find libdwarf libraries in elfutils for newer dyninst versions
    # Since we have moved on from 9.3.1 and 9.1 etc.  Only check for non-9.3.2 versions
    # i.e. newer versions than 9.3.2 by doing a not-equal check
-   if [ $dyninstver != "9.3.2" ]; then
+   if [ "$dyninstver" != "9.3.2" ]; then
        if [ ! -z $KRELL_ROOT_LIBELF ] && [ -f $KRELL_ROOT_LIBELF/$LIBDIR/libdw.so ]; then
             export LIBDWARFDIR=$KRELL_ROOT_LIBELF
             export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBELF/$LIBDIR/libdw.so
@@ -6345,7 +6339,7 @@ function build_dyninst_routine() {
             export LIBDWARF_LIBNAME=$KRELL_ROOT_LIBELF/$ALTLIBDIR/libdw.so
        fi
 
-   elif [ $dyninstver == "9.3.2" ]; then
+   elif [ "$dyninstver" == "9.3.2" ]; then
        if [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/$LIBDIR/libdwarf.so ]; then
             #echo "KRELL_ROOT_LIBDWARF built libdwarf or user specified libdwarf found"
             export LIBDWARFDIR=$KRELL_ROOT_LIBDWARF
@@ -6382,9 +6376,9 @@ function build_dyninst_routine() {
    # Find libdwarf includes in elfutils for newer dyninst versions
    # Since we have moved on from 9.3.1 and 9.1 etc.  Only check for non-9.3.2 versions
    # i.e. newer versions than 9.3.2 by doing a not-equal check
-   if [ $dyninstver != "9.3.2" ]; then
+   if [ "$dyninstver" != "9.3.2" ]; then
        export LIBDWARFINC=$KRELL_ROOT_LIBELF/include
-   elif [ $dyninstver == "9.3.2" ]; then
+   elif [ "$dyninstver" == "9.3.2" ]; then
        if [ ! -z $KRELL_ROOT_LIBDWARF ] && [ -f $KRELL_ROOT_LIBDWARF/include/libdwarf.h ]; then
             export LIBDWARFINC=$KRELL_ROOT_LIBDWARF/include
        elif [ ! -z $KRELL_ROOT_PREFIX ] && [ -f $KRELL_ROOT_PREFIX/include/libdwarf.h ]; then
