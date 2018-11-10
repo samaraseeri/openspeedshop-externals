@@ -1971,6 +1971,42 @@ function setup_for_oss_cbtf() {
        export CMAKE_CUPTI_PHRASE1=""
        export CMAKE_CUPTI_PHRASE2=""
    fi
+
+   if [ -d $KRELL_ROOT_PREFIX/tbb ] && [ -f $KRELL_ROOT_PREFIX/tbb/lib/libtbb.so ]; then
+         echo "found TBB, in $KRELL_ROOT_PREFIX/tbb"
+         export TBBROOT=${KRELL_ROOT_PREFIX}/tbb/include
+         export TBB_INSTALL_DIR=${KRELL_ROOT_PREFIX}/tbb/lib
+         export TBB_ROOT_DIR=${KRELL_ROOT_PREFIX}/tbb/lib
+         export TBB_INCLUDE_DIR=${KRELL_ROOT_PREFIX}/tbb/include
+         export TBB_LIBRARY=${KRELL_ROOT_PREFIX}/tbb/lib
+         export TBB_FOUND=1
+         export TBB_INCLUDE_DIRS=${KRELL_ROOT_PREFIX}/tbb/include
+         export TBB_LIBRARIES="${KRELL_ROOT_PREFIX}/tbb/lib/libtbb.so ${KRELL_ROOT_PREFIX}/tbb/lib/libtbbmalloc_proxy.so"
+         echo "TBB_LIBRARIES=${TBB_LIBRARIES}"
+         echo "TBB_INCLUDE_DIRS=${TBB_INCLUDE_DIRS}"
+   elif [ -d /usr/$LIBDIR ] && [ -f /usr/$LIBDIR/libtbb.so ]; then
+         echo "found TBB, in /usr"
+         export TBBROOT=/usr/include
+         export TBB_INSTALL_DIR=/usr/$LIBDIR
+         export TBB_ROOT_DIR=/usr/$LIBDIR
+         export TBB_INCLUDE_DIR=/usr/include
+         export TBB_LIBRARY=/usr/$LIBDIR
+         export TBB_INCLUDE_DIRS=/usr/include/tbb/include
+         export TBB_LIBRARIES="/usr/$LIBDIR/libtbb.so /usr/$LIBDIR/libtbbmalloc_proxy.so"
+         echo "TBB_LIBRARIES=${TBB_LIBRARIES}"
+         echo "TBB_INCLUDE_DIRS=${TBB_INCLUDE_DIRS}"
+   elif [ -d /usr/$ALTLIBDIR ] && [ -f /usr/$ALTLIBDIR/libtbb.so ]; then
+         echo "found TBB, in /usr, alt"
+         export TBBROOT=/usr/include
+         export TBB_INSTALL_DIR=/usr/$ALTLIBDIR
+         export TBB_ROOT_DIR=/usr/$ALTLIBDIR
+         export TBB_INCLUDE_DIR=/usr/include
+         export TBB_LIBRARY=/usr/$ALTLIBDIR
+         export TBB_INCLUDE_DIRS=/usr/include/tbb/include
+         export TBB_LIBRARIES="/usr/$ALTLIBDIR/libtbb.so /usr/$ALTLIBDIR/libtbbmalloc_proxy.so"
+         echo "TBB_LIBRARIES=${TBB_LIBRARIES}"
+         echo "TBB_INCLUDE_DIRS=${TBB_INCLUDE_DIRS}"
+   fi
    
    
    CC_PHRASE=
